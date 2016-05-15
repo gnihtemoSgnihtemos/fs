@@ -2,6 +2,7 @@ package crawler
 
 import (
 	"crypto/tls"
+	"fmt"
 	"log"
 	"path/filepath"
 	"strings"
@@ -17,42 +18,46 @@ type dirLister interface {
 
 type Crawler struct {
 	site      Site
-	log       *log.Logger
+	logger    *log.Logger
 	ftpClient *ftp.Client
 	dbClient  *database.Client
 }
 
-func newCrawler(site Site, ftpClient *ftp.Client, dbClient *database.Client, logger *log.Logger) *Crawler {
+func New(site Site, dbClient *database.Client, logger *log.Logger) *Crawler {
 	return &Crawler{
-		ftpClient: ftpClient,
-		dbClient:  dbClient,
-		site:      site,
-		log:       logger,
+		dbClient: dbClient,
+		site:     site,
+		logger:   logger,
 	}
 }
 
-func Connect(site Site, dbClient *database.Client, logger *log.Logger) (*Crawler, error) {
-	ftpClient, err := ftp.DialTimeout("tcp", site.Address, time.Second*site.ConnectTimeout)
+func (c *Crawler) Connect() error {
+	ftpClient, err := ftp.DialTimeout("tcp", c.site.Address, time.Second*c.site.ConnectTimeout)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	if site.TLS {
-		if err := ftpClient.LoginWithTLS(&tls.Config{InsecureSkipVerify: true}, site.Username, site.Password); err != nil {
-			return nil, err
+	if c.site.TLS {
+		if err := ftpClient.LoginWithTLS(&tls.Config{InsecureSkipVerify: true}, c.site.Username, c.site.Password); err != nil {
+			return err
 		}
 	} else {
-		if err := ftpClient.Login(site.Username, site.Password); err != nil {
-			return nil, err
+		if err := ftpClient.Login(c.site.Username, c.site.Password); err != nil {
+			return err
 		}
 	}
-	logger.Print("Connected")
-	return newCrawler(site, ftpClient, dbClient, logger), nil
+	c.ftpClient = ftpClient
+	return nil
+}
+
+func (c *Crawler) Logf(format string, v ...interface{}) {
+	prefix := fmt.Sprintf("[%s] ", c.site.Name)
+	c.logger.Printf(prefix+format, v...)
 }
 
 func (c *Crawler) List(path string) ([]ftp.File, error) {
 	message, err := c.ftpClient.Stat("-al " + path)
 	if err != nil {
-		c.log.Printf("listing directory %s failed: %s", path, err)
+		c.Logf("Listing directory %s failed: %s", path, err)
 		return nil, nil
 	}
 	return ftp.ParseFiles(path, strings.NewReader(message))
@@ -81,7 +86,7 @@ func (c *Crawler) Run() error {
 	if err := c.dbClient.Insert(c.site.Name, keep); err != nil {
 		return err
 	}
-	c.log.Printf("saved %d entries", len(keep))
+	c.Logf("Saved %d directories", len(keep))
 	return nil
 }
 

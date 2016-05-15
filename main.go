@@ -31,19 +31,19 @@ func (c *updateCmd) Execute(args []string) error {
 	if err != nil {
 		return err
 	}
+	logger := log.New(os.Stderr, "", log.LstdFlags)
 	sem := make(chan bool, cfg.Concurrency)
 	for _, site := range cfg.Sites {
 		sem <- true
 		go func(site crawler.Site) {
 			defer func() { <-sem }()
-			logger := log.New(os.Stderr, fmt.Sprintf("[%s] ", site.Name), log.LstdFlags)
-			c, err := crawler.Connect(site, db, logger)
-			if err != nil {
-				logger.Printf("Failed to connect: %s", err)
+			c := crawler.New(site, db, logger)
+			if err := c.Connect(); err != nil {
+				c.Logf("Failed to connect: %s", err)
 				return
 			}
 			if err := c.Run(); err != nil {
-				logger.Printf("Failed crawling: %s", err)
+				c.Logf("Failed crawling: %s", err)
 				return
 			}
 		}(site)
