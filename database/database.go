@@ -65,6 +65,7 @@ func (c *Client) insertSite(siteName string) error {
 	if err != nil {
 		return err
 	}
+	defer tx.Rollback()
 	if _, err := tx.Exec("INSERT INTO site (name) VALUES ($1)", siteName); err != nil {
 		return err
 	}
@@ -100,6 +101,7 @@ func (c *Client) DeleteSites(sites []Site) error {
 	if err != nil {
 		return err
 	}
+	defer tx.Rollback()
 	for _, s := range sites {
 		if _, err := tx.Exec("DELETE FROM site WHERE id=$1", s.ID); err != nil {
 			return err
@@ -127,6 +129,7 @@ func (c *Client) Insert(siteName string, dirs []Dir) error {
 	if err != nil {
 		return err
 	}
+	defer tx.Rollback()
 	for _, d := range dirs {
 		if _, err := tx.Exec("INSERT INTO dir (site_id, path, name) VALUES ($1, $2, $3)", site.ID, d.Path, d.Name); err != nil {
 			return err
