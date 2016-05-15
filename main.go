@@ -23,9 +23,14 @@ type updateCmd struct {
 	Site string `short:"s" long:"site" description:"Update a single site" value-name:"NAME"`
 }
 
+type gcCmd struct {
+	opts
+	Dryrun bool `short:"n" long:"dry-run" description:"Only show what would be deleted"`
+}
+
 func (c *updateCmd) Execute(args []string) error {
 	cfg := readConfig(c.Config)
-	dbClient, err := database.New(cfg.Database)
+	db, err := database.New(cfg.Database)
 	if err != nil {
 		return err
 	}
@@ -51,13 +56,50 @@ func (c *updateCmd) Execute(args []string) error {
 
 		logger.Print("connected")
 
-		c := crawler.New(ftpClient, dbClient, site, logger)
+		c := crawler.New(ftpClient, db, site, logger)
 		if err := c.Run(); err != nil {
 			logger.Printf("failed crawling: %s", err)
 			continue
 		}
 	}
 	return nil
+}
+
+func (c *gcCmd) Execute(args []string) error {
+	cfg := readConfig(c.Config)
+	db, err := database.New(cfg.Database)
+	if err != nil {
+		return err
+	}
+	sites, err := db.GetSites()
+	if err != nil {
+		return err
+	}
+	remove := []database.Site{}
+	for _, s1 := range sites {
+		found := false
+		for _, s2 := range cfg.Sites {
+			if s1.Name == s2.Name {
+				found = true
+				break
+			}
+		}
+		if !found {
+			remove = append(remove, s1)
+		}
+	}
+	if c.Dryrun {
+		for _, s := range remove {
+			fmt.Printf("Deleting %s\n", s.Name)
+		}
+		return nil
+	}
+	log.Printf("Removing %d sites", len(remove))
+	if err := db.DeleteSites(remove); err != nil {
+		return err
+	}
+	log.Print("Running vacuum")
+	return db.Vacuum()
 }
 
 func readConfig(name string) crawler.Config {
@@ -80,7 +122,11 @@ func main() {
 		"Crawls sites and updates the database.", &update); err != nil {
 		log.Fatal(err)
 	}
-
+	var gc gcCmd
+	if _, err := p.AddCommand("gc", "Clean database",
+		"Remove entries for sites that do not exist in config", &gc); err != nil {
+		log.Fatal(err)
+	}
 	if _, err := p.Parse(); err != nil {
 		log.Fatal(err)
 	}

@@ -87,6 +87,36 @@ func (c *Client) getSite(siteName string) (Site, error) {
 	return site, nil
 }
 
+func (c *Client) GetSites() ([]Site, error) {
+	var sites []Site
+	if err := c.db.Select(&sites, "SELECT * FROM site ORDER BY name ASC"); err != nil {
+		return nil, err
+	}
+	return sites, nil
+}
+
+func (c *Client) DeleteSites(sites []Site) error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	tx, err := c.db.Beginx()
+	if err != nil {
+		return err
+	}
+	for _, s := range sites {
+		if _, err := tx.Exec("DELETE FROM site WHERE id=$1", s.ID); err != nil {
+			return err
+		}
+	}
+	return tx.Commit()
+}
+
+func (c *Client) Vacuum() error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	_, err := c.db.Exec("VACUUM")
+	return err
+}
+
 func (c *Client) Insert(siteName string, files []ftp.File) error {
 	// Ensure writes to SQLite db are serialized
 	c.mu.Lock()
