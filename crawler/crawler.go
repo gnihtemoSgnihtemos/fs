@@ -56,7 +56,7 @@ func (c *Crawler) Logf(format string, v ...interface{}) {
 }
 
 func (c *Crawler) List(path string) ([]ftp.File, error) {
-	message, err := c.ftpClient.Stat("-al " + path)
+	message, err := c.ftpClient.Stat(path)
 	if err != nil {
 		c.Logf("Listing directory %s failed: %s", path, err)
 		return nil, nil
