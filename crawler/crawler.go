@@ -38,12 +38,12 @@ func (c *Client) List(path string) ([]ftp.File, error) {
 	return ftp.ParseFiles(path, strings.NewReader(message))
 }
 
-func (c *Client) WalkDirs(path string) ([]ftp.File, error) {
-	return walkDirs(c, path, -1)
+func (c *Client) WalkShallow(path string) ([]ftp.File, error) {
+	return walkShallow(c, path, -1)
 }
 
 func (c *Client) Run() error {
-	files, err := c.WalkDirs(c.site.Root)
+	files, err := c.WalkShallow(c.site.Root)
 	if err != nil {
 		return err
 	}
@@ -62,7 +62,7 @@ func (c *Client) Run() error {
 	return nil
 }
 
-func walkDirs(lister dirLister, path string, maxdepth int) ([]ftp.File, error) {
+func walkShallow(lister dirLister, path string, maxdepth int) ([]ftp.File, error) {
 	files, err := lister.List(path)
 	if err != nil {
 		return nil, err
@@ -91,7 +91,7 @@ Loop:
 				continue Loop
 			}
 		}
-		fs, err := walkDirs(lister, subpath, maxdepth)
+		fs, err := walkShallow(lister, subpath, maxdepth)
 		if err != nil {
 			return nil, err
 		}

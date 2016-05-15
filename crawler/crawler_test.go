@@ -75,7 +75,7 @@ func (l *testLister) List(path string) ([]ftp.File, error) {
 	}, nil
 }
 
-func TestWalkDirs(t *testing.T) {
+func TestWalk(t *testing.T) {
 	want := []ftp.File{
 		{Name: ".", Mode: os.ModeDir},
 		{Name: "..", Mode: os.ModeDir},
@@ -93,7 +93,7 @@ func TestWalkDirs(t *testing.T) {
 		{Name: "def", Mode: os.ModeDir},
 		{Name: "xyz", Mode: os.ModeDir},
 	}
-	got, err := walkDirs(&testLister{}, "/")
+	got, err := walkShallow(&testLister{}, "/", -1)
 	if err != nil {
 		t.Fatal(err)
 	}
