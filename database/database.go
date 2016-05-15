@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS entry (
   path TEXT,
   name TEXT,
   CONSTRAINT path_unique UNIQUE(site_id, path),
-  FOREIGN KEY(site_id) REFERENCES site(id)
+  FOREIGN KEY(site_id) REFERENCES site(id) ON DELETE CASCADE
 );
 `
 
@@ -43,6 +43,10 @@ type Client struct {
 func New(filename string) (*Client, error) {
 	db, err := sqlx.Connect("sqlite3", filename)
 	if err != nil {
+		return nil, err
+	}
+	// Enable foregin keys support
+	if _, err := db.Exec("PRAGMA foreign_keys = ON"); err != nil {
 		return nil, err
 	}
 	if _, err := db.Exec(schema); err != nil {
