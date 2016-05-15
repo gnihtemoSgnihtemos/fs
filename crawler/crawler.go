@@ -73,22 +73,38 @@ func (c *Crawler) Run() error {
 	if err != nil {
 		return err
 	}
-	keep := []database.Dir{}
-	for _, f := range files {
-		if f.IsCurrentOrParent() {
-			continue
-		}
-		d := database.Dir{Name: f.Name, Path: f.Path, Modified: f.Modified.Unix()}
-		keep = append(keep, d)
-	}
+	dirs := makeDirs(files)
 	if err := c.dbClient.DeleteDirs(c.site.Name); err != nil {
 		return err
 	}
-	if err := c.dbClient.Insert(c.site.Name, keep); err != nil {
+	if err := c.dbClient.Insert(c.site.Name, dirs); err != nil {
 		return err
 	}
-	c.Logf("Saved %d directories", len(keep))
+	c.Logf("Saved %d directories", len(dirs))
 	return nil
+}
+
+func makeDirs(files []ftp.File) []database.Dir {
+	keep := []database.Dir{}
+Loop:
+	for _, f1 := range files {
+		if f1.IsCurrentOrParent() {
+			continue
+		}
+		// Ignore any parent dirs
+		for _, f2 := range files {
+			if filepath.Dir(f2.Path) == f1.Path {
+				continue Loop
+			}
+		}
+		d := database.Dir{
+			Name:     f1.Name,
+			Path:     f1.Path,
+			Modified: f1.Modified.Unix(),
+		}
+		keep = append(keep, d)
+	}
+	return keep
 }
 
 func walkShallow(lister dirLister, path string, maxdepth int) ([]ftp.File, error) {

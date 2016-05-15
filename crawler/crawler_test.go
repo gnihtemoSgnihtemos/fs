@@ -5,6 +5,7 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/martinp/ftpsc/database"
 	"github.com/martinp/ftpsc/ftp"
 )
 
@@ -99,5 +100,26 @@ func TestWalk(t *testing.T) {
 	}
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("WalkDirs(%q) => %+v, want %+v", "/", got, want)
+	}
+}
+
+func TestMakeDirs(t *testing.T) {
+	files := []ftp.File{
+		{Path: "/foo", Name: "."},
+		{Path: "/foo", Name: ".."},
+		{Path: "/foo", Name: "foo"},
+		{Path: "/foo/bar", Name: "bar"},
+		{Path: "/foo/bar/baz", Name: "baz"},
+	}
+	want := database.Dir{Path: "/foo/bar/baz", Name: "baz"}
+	got := filterFiles(files)
+	if len(got) == 0 {
+		t.Fatal("expected non-zero length")
+	}
+	if got[0].Name != want.Name {
+		t.Errorf("got Name=%q, want Name=%q", got[0].Name, want.Name)
+	}
+	if got[0].Path != want.Path {
+		t.Errorf("got Path=%q, want Path=%q", got[0].Path, want.Path)
 	}
 }
