@@ -77,7 +77,7 @@ func (c *Crawler) Run() error {
 		if f.IsCurrentOrParent() {
 			continue
 		}
-		d := database.Dir{Name: f.Name, Path: f.Path}
+		d := database.Dir{Name: f.Name, Path: f.Path, Modified: f.Modified.Unix()}
 		keep = append(keep, d)
 	}
 	if err := c.dbClient.DeleteDirs(c.site.Name); err != nil {

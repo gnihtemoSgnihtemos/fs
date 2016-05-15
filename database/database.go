@@ -20,6 +20,7 @@ CREATE TABLE IF NOT EXISTS dir (
   site_id INTEGER,
   path TEXT,
   name TEXT,
+  modified INTEGER,
   CONSTRAINT path_unique UNIQUE(site_id, path),
   FOREIGN KEY(site_id) REFERENCES site(id) ON DELETE CASCADE
 );
@@ -31,9 +32,10 @@ type Site struct {
 }
 
 type Dir struct {
-	Site string `db:"site"`
-	Path string `db:"path"`
-	Name string `db:"name"`
+	Site     string `db:"site"`
+	Path     string `db:"path"`
+	Name     string `db:"name"`
+	Modified int64  `db:"modified"`
 }
 
 type Client struct {
@@ -138,7 +140,7 @@ func (c *Client) Insert(siteName string, dirs []Dir) error {
 	}
 	defer tx.Rollback()
 	for _, d := range dirs {
-		if _, err := tx.Exec("INSERT INTO dir (site_id, path, name) VALUES ($1, $2, $3)", site.ID, d.Path, d.Name); err != nil {
+		if _, err := tx.Exec("INSERT INTO dir (site_id, path, name, modified) VALUES ($1, $2, $3, $4)", site.ID, d.Path, d.Name, d.Modified); err != nil {
 			return err
 		}
 	}
