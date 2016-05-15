@@ -7,8 +7,6 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 
 	"database/sql"
-
-	"github.com/martinp/ftpsc/ftp"
 )
 
 const schema = `
@@ -17,7 +15,7 @@ CREATE TABLE IF NOT EXISTS site (
   name TEXT,
   CONSTRAINT name_unique UNIQUE (name)
 );
-CREATE TABLE IF NOT EXISTS entry (
+CREATE TABLE IF NOT EXISTS dir (
   id INTEGER PRIMARY KEY,
   site_id INTEGER,
   path TEXT,
@@ -32,7 +30,7 @@ type Site struct {
 	Name string `db:"name"`
 }
 
-type Entry struct {
+type Dir struct {
 	Site string `db:"site"`
 	Path string `db:"path"`
 	Name string `db:"name"`
@@ -117,7 +115,7 @@ func (c *Client) Vacuum() error {
 	return err
 }
 
-func (c *Client) Insert(siteName string, files []ftp.File) error {
+func (c *Client) Insert(siteName string, dirs []Dir) error {
 	// Ensure writes to SQLite db are serialized
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -129,8 +127,8 @@ func (c *Client) Insert(siteName string, files []ftp.File) error {
 	if err != nil {
 		return err
 	}
-	for _, f := range files {
-		if _, err := tx.Exec("INSERT INTO entry (site_id, path, name) VALUES ($1, $2, $3)", site.ID, f.Path, f.Name); err != nil {
+	for _, d := range dirs {
+		if _, err := tx.Exec("INSERT INTO dir (site_id, path, name) VALUES ($1, $2, $3)", site.ID, d.Path, d.Name); err != nil {
 			return err
 		}
 	}

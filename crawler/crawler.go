@@ -47,12 +47,13 @@ func (c *Client) Run() error {
 	if err != nil {
 		return err
 	}
-	keep := []ftp.File{}
+	keep := []database.Dir{}
 	for _, f := range files {
 		if f.IsCurrentOrParent() {
 			continue
 		}
-		keep = append(keep, f)
+		d := database.Dir{Name: f.Name, Path: f.Path}
+		keep = append(keep, d)
 	}
 	if err := c.dbClient.Insert(c.site.Name, keep); err != nil {
 		return err
