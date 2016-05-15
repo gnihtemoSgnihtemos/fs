@@ -112,7 +112,7 @@ func TestMakeDirs(t *testing.T) {
 		{Path: "/foo/bar/baz", Name: "baz"},
 	}
 	want := database.Dir{Path: "/foo/bar/baz", Name: "baz"}
-	got := filterFiles(files)
+	got := makeDirs(files)
 	if len(got) == 0 {
 		t.Fatal("expected non-zero length")
 	}
