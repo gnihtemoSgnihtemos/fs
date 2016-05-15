@@ -166,9 +166,17 @@ func (c *Client) Insert(siteName string, dirs []Dir) error {
 	return tx.Commit()
 }
 
-func (c *Client) FindDirs(s string) ([]Dir, error) {
+func (c *Client) FindDirs(keyword string) ([]Dir, error) {
 	var dirs []Dir
-	if err := c.db.Select(&dirs, "SELECT site.name AS site, path, dir_fts.name, modified FROM dir_fts INNER JOIN site ON site_id = site.id WHERE path MATCH $1", s); err != nil {
+	if err := c.db.Select(&dirs, "SELECT site.name AS site, path, dir_fts.name, modified FROM dir_fts INNER JOIN site ON site_id = site.id WHERE path MATCH $1", keyword); err != nil {
+		return nil, err
+	}
+	return dirs, nil
+}
+
+func (c *Client) FindDirsBySite(keyword string, site string) ([]Dir, error) {
+	var dirs []Dir
+	if err := c.db.Select(&dirs, "SELECT site.name AS site, path, dir_fts.name, modified FROM dir_fts INNER JOIN site ON site_id = site.id WHERE path MATCH $1 AND site.name = $2", keyword, site); err != nil {
 		return nil, err
 	}
 	return dirs, nil
