@@ -46,6 +46,7 @@ func (c *Crawler) Connect() error {
 		}
 	}
 	c.ftpClient = ftpClient
+	c.Logf("Connected to %s (TLS=%t)", c.site.Address, c.site.TLS)
 	return nil
 }
 
