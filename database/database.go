@@ -10,11 +10,13 @@ import (
 )
 
 const schema = `
+-- Tables for sites and dirs
 CREATE TABLE IF NOT EXISTS site (
   id INTEGER PRIMARY KEY,
   name TEXT,
   CONSTRAINT name_unique UNIQUE (name)
 );
+
 CREATE TABLE IF NOT EXISTS dir (
   id INTEGER PRIMARY KEY,
   site_id INTEGER,
@@ -24,6 +26,23 @@ CREATE TABLE IF NOT EXISTS dir (
   CONSTRAINT path_unique UNIQUE(site_id, path),
   FOREIGN KEY(site_id) REFERENCES site(id) ON DELETE CASCADE
 );
+
+-- FTS index table
+CREATE VIRTUAL TABLE IF NOT EXISTS dir_fts USING fts4(
+  id INTEGER PRIMARY KEY,
+  site_id INTEGER,
+  path TEXT,
+  name TEXT,
+  modified INTEGER
+);
+
+-- Triggers to keep FTS table up to date
+CREATE TRIGGER IF NOT EXISTS dir_bd BEFORE DELETE ON dir BEGIN
+  DELETE FROM dir_fts WHERE id=old.id;
+END;
+CREATE TRIGGER IF NOT EXISTS dir_ai AFTER INSERT ON dir BEGIN
+  INSERT INTO dir_fts(id, site_id, path, name, modified) VALUES (new.id, new.site_id, new.path, new.name, new.modified);
+END;
 `
 
 type Site struct {
@@ -145,4 +164,12 @@ func (c *Client) Insert(siteName string, dirs []Dir) error {
 		}
 	}
 	return tx.Commit()
+}
+
+func (c *Client) FindDirs(s string) ([]Dir, error) {
+	var dirs []Dir
+	if err := c.db.Select(&dirs, "SELECT site.name AS site, path, dir_fts.name, modified FROM dir_fts INNER JOIN site ON site_id = site.id WHERE path MATCH $1", s); err != nil {
+		return nil, err
+	}
+	return dirs, nil
 }

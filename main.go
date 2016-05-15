@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/jessevdk/go-flags"
 	"github.com/martinp/ftpsc/crawler"
@@ -23,6 +24,10 @@ type updateCmd struct {
 type gcCmd struct {
 	opts
 	Dryrun bool `short:"n" long:"dry-run" description:"Only show what would be deleted"`
+}
+
+type searchCmd struct {
+	opts
 }
 
 func (c *updateCmd) Execute(args []string) error {
@@ -95,6 +100,20 @@ func (c *gcCmd) Execute(args []string) error {
 	return db.Vacuum()
 }
 
+func (c *searchCmd) Execute(args []string) error {
+	cfg := readConfig(c.Config)
+	db, err := database.New(cfg.Database)
+	if err != nil {
+		return err
+	}
+	dirs, err := db.FindDirs(strings.Join(args, " "))
+	if err != nil {
+		return err
+	}
+	db.WriteTable(dirs, os.Stdout)
+	return nil
+}
+
 func readConfig(name string) crawler.Config {
 	if name == "~/.ftpscrc" {
 		home := os.Getenv("HOME")
@@ -118,6 +137,11 @@ func main() {
 	var gc gcCmd
 	if _, err := p.AddCommand("gc", "Clean database",
 		"Remove entries for sites that do not exist in config", &gc); err != nil {
+		log.Fatal(err)
+	}
+	var search searchCmd
+	if _, err := p.AddCommand("search", "Search database",
+		"Search database", &search); err != nil {
 		log.Fatal(err)
 	}
 	if _, err := p.Parse(); err != nil {
