@@ -2,6 +2,7 @@ package crawler
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
@@ -9,9 +10,10 @@ import (
 )
 
 type Config struct {
-	Database string
-	Sites    []Site
-	Default  Site
+	Database    string
+	Concurrency int
+	Sites       []Site
+	Default     Site
 }
 
 type Site struct {
@@ -45,6 +47,16 @@ func readConfig(r io.Reader) (Config, error) {
 	return cfg, nil
 }
 
+func (c *Config) Validate() error {
+	if c.Concurrency < 1 {
+		return fmt.Errorf("concurrency must be >= 1")
+	}
+	if len(c.Database) == 0 {
+		return fmt.Errorf("path to database must be set")
+	}
+	return nil
+}
+
 func ReadConfig(name string) (Config, error) {
 	f, err := os.Open(name)
 	if err != nil {
@@ -53,6 +65,9 @@ func ReadConfig(name string) (Config, error) {
 	defer f.Close()
 	cfg, err := readConfig(f)
 	if err != nil {
+		return Config{}, err
+	}
+	if err := cfg.Validate(); err != nil {
 		return Config{}, err
 	}
 	return cfg, nil
