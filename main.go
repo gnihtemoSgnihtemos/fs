@@ -34,6 +34,9 @@ func (c *updateCmd) Execute(args []string) error {
 	logger := log.New(os.Stderr, "", log.LstdFlags)
 	sem := make(chan bool, cfg.Concurrency)
 	for _, site := range cfg.Sites {
+		if c.Site != "" && c.Site != site.Name {
+			continue
+		}
 		sem <- true
 		go func(site crawler.Site) {
 			defer func() { <-sem }()
