@@ -1,6 +1,8 @@
 package database
 
 import (
+	"sync"
+
 	"github.com/jmoiron/sqlx"
 	_ "github.com/mattn/go-sqlite3"
 
@@ -38,6 +40,7 @@ type Entry struct {
 
 type Client struct {
 	db *sqlx.DB
+	mu sync.Mutex
 }
 
 func New(filename string) (*Client, error) {
@@ -85,6 +88,9 @@ func (c *Client) getSite(siteName string) (Site, error) {
 }
 
 func (c *Client) Insert(siteName string, files []ftp.File) error {
+	// Ensure writes to SQLite db are serialized
+	c.mu.Lock()
+	defer c.mu.Unlock()
 	site, err := c.getSite(siteName)
 	if err != nil {
 		return err
