@@ -97,11 +97,28 @@ drwxrwxrwx   3 foo   bar       4096 Jul  3  2014 dir1
 drwxrwxrwx  19 foo   bar       4096 Apr 10 08:41 dir2
 drwxrwxrwx  72 foo   bar      94208 May 15 01:03 dir3
 213 End of Status`
-	files, err := ParseFiles(strings.NewReader(message))
+	files, err := ParseFiles("/", strings.NewReader(message))
 	if err != nil {
 		t.Fatal(err)
 	}
 	if got := len(files); got != 5 {
 		t.Errorf("got %d, want %d", got, 5)
+	}
+}
+
+func TestIsCurrentOrParent(t *testing.T) {
+	var tests = []struct {
+		in  string
+		out bool
+	}{
+		{".", true},
+		{"..", true},
+		{"foo", false},
+	}
+	for _, tt := range tests {
+		got := (&File{Name: tt.in}).IsCurrentOrParent()
+		if got != tt.out {
+			t.Errorf("File{Name: %q}.IsCurrentOrParent() => %t, want %t", tt.in, got, tt.out)
+		}
 	}
 }

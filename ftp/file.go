@@ -12,6 +12,8 @@ import (
 	"time"
 )
 
+var fieldSplitter = regexp.MustCompile("\\s+")
+
 type File struct {
 	Path       string
 	Name       string
@@ -84,7 +86,7 @@ func ParseFile(s string) (File, error) {
 	// 6 = day
 	// 7 = time or year
 	// 8 = filename
-	parts := regexp.MustCompile("\\s+").Split(s, 9)
+	parts := fieldSplitter.Split(s, 9)
 	if len(parts) != 9 {
 		return File{}, fmt.Errorf("failed to parse file: %s", s)
 	}
@@ -144,6 +146,10 @@ func ParseFiles(path string, r io.Reader) ([]File, error) {
 		return nil, err
 	}
 	return files, nil
+}
+
+func (f *File) IsCurrentOrParent() bool {
+	return f.Name == "." || f.Name == ".."
 }
 
 func (f *File) IsSymlink() bool {
