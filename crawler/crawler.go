@@ -38,10 +38,6 @@ func (c *Client) List(path string) ([]ftp.File, error) {
 	return ftp.ParseFiles(path, strings.NewReader(message))
 }
 
-func (c *Client) Write(files []ftp.File) error {
-	return c.dbClient.Add(c.site.Name, files)
-}
-
 func (c *Client) WalkDirs(path string) ([]ftp.File, error) {
 	return walkDirs(c, path, -1)
 }
@@ -58,7 +54,7 @@ func (c *Client) Run() error {
 		}
 		keep = append(keep, f)
 	}
-	if err := c.Write(keep); err != nil {
+	if err := c.dbClient.Insert(c.site.Name, keep); err != nil {
 		return err
 	}
 	c.log.Printf("saved %d entries", len(keep))

@@ -59,7 +59,7 @@ func (c *Client) Close() error {
 	return c.db.Close()
 }
 
-func (c *Client) addSite(siteName string) error {
+func (c *Client) insertSite(siteName string) error {
 	tx, err := c.db.Beginx()
 	if err != nil {
 		return err
@@ -74,7 +74,7 @@ func (c *Client) getSite(siteName string) (Site, error) {
 	var site Site
 	err := c.db.Get(&site, "SELECT * FROM site WHERE name=$1", siteName)
 	if err == sql.ErrNoRows {
-		if err := c.addSite(siteName); err != nil {
+		if err := c.insertSite(siteName); err != nil {
 			return Site{}, err
 		}
 		return c.getSite(siteName)
@@ -84,7 +84,7 @@ func (c *Client) getSite(siteName string) (Site, error) {
 	return site, nil
 }
 
-func (c *Client) Add(siteName string, files []ftp.File) error {
+func (c *Client) Insert(siteName string, files []ftp.File) error {
 	site, err := c.getSite(siteName)
 	if err != nil {
 		return err
