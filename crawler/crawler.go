@@ -36,14 +36,15 @@ func (c *Client) List(path string) ([]ftp.File, error) {
 }
 
 func (c *Client) WalkDirs(path string) ([]ftp.File, error) {
-	return walkDirs(c, path)
+	return walkDirs(c, path, -1)
 }
 
-func walkDirs(lister dirLister, path string) ([]ftp.File, error) {
+func walkDirs(lister dirLister, path string, maxdepth int) ([]ftp.File, error) {
 	files, err := lister.List(path)
 	if err != nil {
 		return nil, err
 	}
+Loop:
 	for _, f := range files {
 		if f.Name == "." || f.Name == ".." {
 			continue
@@ -52,25 +53,26 @@ func walkDirs(lister dirLister, path string) ([]ftp.File, error) {
 			continue
 		}
 		subpath := filepath.Join(path, f.Name)
-		// Peek at sub-directory and stop walking if sub-directory contains non-directories
-		keepWalking := true
+		depth := strings.Count(subpath, "/")
+		if maxdepth > 0 && depth > maxdepth {
+			continue
+		}
+		// Peek at sub-directory to determine max depth
 		peek, err := lister.List(subpath)
 		if err != nil {
 			return nil, err
 		}
 		for _, f := range peek {
 			if !f.Mode.IsDir() {
-				keepWalking = false
-				break
+				maxdepth = depth - 1
+				continue Loop
 			}
 		}
-		if keepWalking {
-			fs, err := walkDirs(lister, subpath)
-			if err != nil {
-				return nil, err
-			}
-			files = append(files, fs...)
+		fs, err := walkDirs(lister, subpath, maxdepth)
+		if err != nil {
+			return nil, err
 		}
+		files = append(files, fs...)
 	}
 	return files, nil
 }
