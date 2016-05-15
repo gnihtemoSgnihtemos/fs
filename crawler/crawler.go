@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/martinp/ftpsc/database"
 	"github.com/martinp/ftpsc/ftp"
 )
 
@@ -14,13 +15,15 @@ type dirLister interface {
 
 type Client struct {
 	site      Site
-	ftpClient *ftp.Client
 	log       *log.Logger
+	ftpClient *ftp.Client
+	dbClient  *database.Client
 }
 
-func New(ftpClient *ftp.Client, site Site, logger *log.Logger) *Client {
+func New(ftpClient *ftp.Client, dbClient *database.Client, site Site, logger *log.Logger) *Client {
 	return &Client{
 		ftpClient: ftpClient,
+		dbClient:  dbClient,
 		site:      site,
 		log:       logger,
 	}
@@ -35,8 +38,31 @@ func (c *Client) List(path string) ([]ftp.File, error) {
 	return ftp.ParseFiles(path, strings.NewReader(message))
 }
 
+func (c *Client) Write(files []ftp.File) error {
+	return c.dbClient.Add(c.site.Name, files)
+}
+
 func (c *Client) WalkDirs(path string) ([]ftp.File, error) {
 	return walkDirs(c, path, -1)
+}
+
+func (c *Client) Run() error {
+	files, err := c.WalkDirs(c.site.Root)
+	if err != nil {
+		return err
+	}
+	keep := []ftp.File{}
+	for _, f := range files {
+		if f.IsCurrentOrParent() {
+			continue
+		}
+		keep = append(keep, f)
+	}
+	if err := c.Write(keep); err != nil {
+		return err
+	}
+	c.log.Printf("saved %d entries", len(keep))
+	return nil
 }
 
 func walkDirs(lister dirLister, path string, maxdepth int) ([]ftp.File, error) {
@@ -46,7 +72,7 @@ func walkDirs(lister dirLister, path string, maxdepth int) ([]ftp.File, error) {
 	}
 Loop:
 	for _, f := range files {
-		if f.Name == "." || f.Name == ".." {
+		if f.IsCurrentOrParent() {
 			continue
 		}
 		if !f.Mode.IsDir() {

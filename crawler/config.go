@@ -9,8 +9,9 @@ import (
 )
 
 type Config struct {
-	Sites   []Site
-	Default Site
+	Database string
+	Sites    []Site
+	Default  Site
 }
 
 type Site struct {

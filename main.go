@@ -10,33 +10,25 @@ import (
 
 	"github.com/jessevdk/go-flags"
 	"github.com/martinp/ftpsc/crawler"
+	"github.com/martinp/ftpsc/database"
 	"github.com/martinp/ftpsc/ftp"
 )
 
-func main() {
-	var opts struct {
-		Config string `short:"f" long:"config" description:"Config file" value-name:"FILE" default:"~/.ftpscrc"`
-		Test   bool   `short:"t" long:"test" description:"Test and print config"`
-	}
+type opts struct {
+	Config string `short:"f" long:"config" description:"Config file" value-name:"FILE" default:"~/.ftpscrc"`
+}
 
-	_, err := flags.ParseArgs(&opts, os.Args)
+type updateCmd struct {
+	opts
+	Site string `short:"s" long:"site" description:"Update a single site" value-name:"NAME"`
+}
+
+func (c *updateCmd) Execute(args []string) error {
+	cfg := readConfig(c.Config)
+	dbClient, err := database.New(cfg.Database)
 	if err != nil {
-		os.Exit(1)
+		return err
 	}
-
-	var name string
-	if opts.Config == "~/.ftpscrc" {
-		home := os.Getenv("HOME")
-		name = filepath.Join(home, ".ftpscrc")
-	} else {
-		name = opts.Config
-	}
-
-	cfg, err := crawler.ReadConfig(name)
-	if err != nil {
-		log.Fatal(err)
-	}
-
 	for _, site := range cfg.Sites {
 		logger := log.New(os.Stderr, fmt.Sprintf("[%s] ", site.Name), log.LstdFlags)
 		ftpClient, err := ftp.DialTimeout("tcp", site.Address, time.Second*site.ConnectTimeout)
@@ -57,14 +49,39 @@ func main() {
 			}
 		}
 
-		c := crawler.New(ftpClient, site, logger)
-		dirs, err := c.WalkDirs(site.Root)
-		if err != nil {
-			logger.Printf("failed walking directories: %s", err)
+		logger.Print("connected")
+
+		c := crawler.New(ftpClient, dbClient, site, logger)
+		if err := c.Run(); err != nil {
+			logger.Printf("failed crawling: %s", err)
 			continue
 		}
-		for _, d := range dirs {
-			fmt.Printf("%+v\n", d)
-		}
+	}
+	return nil
+}
+
+func readConfig(name string) crawler.Config {
+	if name == "~/.ftpscrc" {
+		home := os.Getenv("HOME")
+		name = filepath.Join(home, ".ftpscrc")
+	}
+	cfg, err := crawler.ReadConfig(name)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return cfg
+}
+
+func main() {
+	p := flags.NewParser(nil, flags.Default)
+
+	var update updateCmd
+	if _, err := p.AddCommand("update", "Update database",
+		"Crawls sites and updates the database.", &update); err != nil {
+		log.Fatal(err)
+	}
+
+	if _, err := p.Parse(); err != nil {
+		log.Fatal(err)
 	}
 }
