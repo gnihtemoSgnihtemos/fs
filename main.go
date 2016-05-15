@@ -1,17 +1,14 @@
 package main
 
 import (
-	"crypto/tls"
 	"fmt"
 	"log"
 	"os"
 	"path/filepath"
-	"time"
 
 	"github.com/jessevdk/go-flags"
 	"github.com/martinp/ftpsc/crawler"
 	"github.com/martinp/ftpsc/database"
-	"github.com/martinp/ftpsc/ftp"
 )
 
 type opts struct {
@@ -34,33 +31,26 @@ func (c *updateCmd) Execute(args []string) error {
 	if err != nil {
 		return err
 	}
+	sem := make(chan bool, cfg.Concurrency)
 	for _, site := range cfg.Sites {
-		logger := log.New(os.Stderr, fmt.Sprintf("[%s] ", site.Name), log.LstdFlags)
-		ftpClient, err := ftp.DialTimeout("tcp", site.Address, time.Second*site.ConnectTimeout)
-		defer ftpClient.Quit()
-		if err != nil {
-			logger.Printf("connection timed out after %d seconds: %s", site.ConnectTimeout, err)
-			continue
-		}
-		if site.TLS {
-			if err := ftpClient.LoginWithTLS(&tls.Config{InsecureSkipVerify: true}, site.Username, site.Password); err != nil {
-				logger.Printf("login with TLS failed: %s", err)
-				continue
+		sem <- true
+		go func(site crawler.Site) {
+			defer func() { <-sem }()
+			logger := log.New(os.Stderr, fmt.Sprintf("[%s] ", site.Name), log.LstdFlags)
+			c, err := crawler.Connect(site, db, logger)
+			if err != nil {
+				logger.Printf("Failed to connect: %s", err)
+				return
 			}
-		} else {
-			if err := ftpClient.Login(site.Username, site.Password); err != nil {
-				logger.Printf("login failed: %s", err)
-				continue
+			if err := c.Run(); err != nil {
+				logger.Printf("Failed crawling: %s", err)
+				return
 			}
-		}
-
-		logger.Print("connected")
-
-		c := crawler.New(ftpClient, db, site, logger)
-		if err := c.Run(); err != nil {
-			logger.Printf("failed crawling: %s", err)
-			continue
-		}
+		}(site)
+	}
+	// Wait for remaining goroutines to finish
+	for i := 0; i < cap(sem); i++ {
+		sem <- true
 	}
 	return nil
 }

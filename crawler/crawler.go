@@ -1,9 +1,11 @@
 package crawler
 
 import (
+	"crypto/tls"
 	"log"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/martinp/ftpsc/database"
 	"github.com/martinp/ftpsc/ftp"
@@ -13,15 +15,15 @@ type dirLister interface {
 	List(path string) ([]ftp.File, error)
 }
 
-type Client struct {
+type Crawler struct {
 	site      Site
 	log       *log.Logger
 	ftpClient *ftp.Client
 	dbClient  *database.Client
 }
 
-func New(ftpClient *ftp.Client, dbClient *database.Client, site Site, logger *log.Logger) *Client {
-	return &Client{
+func newCrawler(site Site, ftpClient *ftp.Client, dbClient *database.Client, logger *log.Logger) *Crawler {
+	return &Crawler{
 		ftpClient: ftpClient,
 		dbClient:  dbClient,
 		site:      site,
@@ -29,7 +31,25 @@ func New(ftpClient *ftp.Client, dbClient *database.Client, site Site, logger *lo
 	}
 }
 
-func (c *Client) List(path string) ([]ftp.File, error) {
+func Connect(site Site, dbClient *database.Client, logger *log.Logger) (*Crawler, error) {
+	ftpClient, err := ftp.DialTimeout("tcp", site.Address, time.Second*site.ConnectTimeout)
+	if err != nil {
+		return nil, err
+	}
+	if site.TLS {
+		if err := ftpClient.LoginWithTLS(&tls.Config{InsecureSkipVerify: true}, site.Username, site.Password); err != nil {
+			return nil, err
+		}
+	} else {
+		if err := ftpClient.Login(site.Username, site.Password); err != nil {
+			return nil, err
+		}
+	}
+	logger.Print("Connected")
+	return newCrawler(site, ftpClient, dbClient, logger), nil
+}
+
+func (c *Crawler) List(path string) ([]ftp.File, error) {
 	message, err := c.ftpClient.Stat("-al " + path)
 	if err != nil {
 		c.log.Printf("listing directory %s failed: %s", path, err)
@@ -38,11 +58,11 @@ func (c *Client) List(path string) ([]ftp.File, error) {
 	return ftp.ParseFiles(path, strings.NewReader(message))
 }
 
-func (c *Client) WalkShallow(path string) ([]ftp.File, error) {
+func (c *Crawler) WalkShallow(path string) ([]ftp.File, error) {
 	return walkShallow(c, path, -1)
 }
 
-func (c *Client) Run() error {
+func (c *Crawler) Run() error {
 	files, err := c.WalkShallow(c.site.Root)
 	if err != nil {
 		return err
@@ -54,6 +74,9 @@ func (c *Client) Run() error {
 		}
 		d := database.Dir{Name: f.Name, Path: f.Path}
 		keep = append(keep, d)
+	}
+	if err := c.dbClient.DeleteDirs(c.site.Name); err != nil {
+		return err
 	}
 	if err := c.dbClient.Insert(c.site.Name, keep); err != nil {
 		return err
