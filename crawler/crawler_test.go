@@ -5,8 +5,8 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/martinp/ftpsc/database"
-	"github.com/martinp/ftpsc/ftp"
+	"github.com/martinp/fs/database"
+	"github.com/martinp/fs/ftp"
 )
 
 type testLister struct {

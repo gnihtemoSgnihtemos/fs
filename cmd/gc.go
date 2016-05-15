@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/martinp/ftpsc/database"
+	"github.com/martinp/fs/database"
 )
 
 type GC struct {

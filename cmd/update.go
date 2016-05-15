@@ -4,8 +4,8 @@ import (
 	"log"
 	"os"
 
-	"github.com/martinp/ftpsc/crawler"
-	"github.com/martinp/ftpsc/database"
+	"github.com/martinp/fs/crawler"
+	"github.com/martinp/fs/database"
 )
 
 type Update struct {

@@ -8,8 +8,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/martinp/ftpsc/database"
-	"github.com/martinp/ftpsc/ftp"
+	"github.com/martinp/fs/database"
+	"github.com/martinp/fs/ftp"
 )
 
 type dirLister interface {

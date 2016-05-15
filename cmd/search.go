@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/martinp/ftpsc/database"
+	"github.com/martinp/fs/database"
 	"github.com/olekukonko/tablewriter"
 )
 

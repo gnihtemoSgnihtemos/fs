@@ -5,17 +5,17 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/martinp/ftpsc/crawler"
+	"github.com/martinp/fs/crawler"
 )
 
 type opts struct {
-	Config string `short:"f" long:"config" description:"Config file" value-name:"FILE" default:"~/.ftpscrc"`
+	Config string `short:"f" long:"config" description:"Config file" value-name:"FILE" default:"~/.fsrc"`
 }
 
 func readConfig(name string) crawler.Config {
-	if name == "~/.ftpscrc" {
+	if name == "~/.fsrc" {
 		home := os.Getenv("HOME")
-		name = filepath.Join(home, ".ftpscrc")
+		name = filepath.Join(home, ".fsrc")
 	}
 	cfg, err := crawler.ReadConfig(name)
 	if err != nil {
