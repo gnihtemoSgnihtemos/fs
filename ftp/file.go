@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
@@ -12,6 +13,7 @@ import (
 )
 
 type File struct {
+	Path       string
 	Name       string
 	User       string
 	Group      string
@@ -119,7 +121,7 @@ func ParseFile(s string) (File, error) {
 	}, nil
 }
 
-func ParseFiles(r io.Reader) ([]File, error) {
+func ParseFiles(path string, r io.Reader) ([]File, error) {
 	files := []File{}
 	scanner := bufio.NewScanner(r)
 	for scanner.Scan() {
@@ -135,6 +137,7 @@ func ParseFiles(r io.Reader) ([]File, error) {
 		if err != nil {
 			return nil, err
 		}
+		f.Path = filepath.Join(path, f.Name)
 		files = append(files, f)
 	}
 	if err := scanner.Err(); err != nil {

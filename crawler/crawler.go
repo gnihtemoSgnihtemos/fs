@@ -32,7 +32,7 @@ func (c *Client) List(path string) ([]ftp.File, error) {
 		c.log.Printf("listing directory %s failed: %s", path, err)
 		return nil, nil
 	}
-	return ftp.ParseFiles(strings.NewReader(message))
+	return ftp.ParseFiles(path, strings.NewReader(message))
 }
 
 func (c *Client) WalkDirs(path string) ([]ftp.File, error) {
