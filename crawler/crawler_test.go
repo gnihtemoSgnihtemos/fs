@@ -12,6 +12,10 @@ import (
 type testLister struct {
 }
 
+func (l *testLister) FilterFiles(files []ftp.File) []ftp.File {
+	return filterFiles(files, []string{"_baz", "_foo"}, true)
+}
+
 func (l *testLister) List(path string) ([]ftp.File, error) {
 	if path == "/foo/bar/baz" {
 		return []ftp.File{
@@ -51,6 +55,9 @@ func (l *testLister) List(path string) ([]ftp.File, error) {
 			{Name: "..", Mode: os.ModeDir},
 			{Name: "baz", Mode: os.ModeDir},
 			{Name: "bax", Mode: os.ModeDir},
+			{Name: "_foo", Mode: os.ModeDir},
+			{Name: "_baz", Mode: os.ModeDir},
+			{Name: "_bax", Mode: os.ModeSymlink},
 		}, nil
 	}
 	if path == "/foo/baz" {

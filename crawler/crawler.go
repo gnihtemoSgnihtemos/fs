@@ -14,6 +14,7 @@ import (
 
 type dirLister interface {
 	List(path string) ([]ftp.File, error)
+	FilterFiles([]ftp.File) []ftp.File
 }
 
 type Crawler struct {
@@ -64,6 +65,10 @@ func (c *Crawler) List(path string) ([]ftp.File, error) {
 	return ftp.ParseFiles(path, strings.NewReader(message))
 }
 
+func (c *Crawler) FilterFiles(files []ftp.File) []ftp.File {
+	return filterFiles(files, c.site.Ignore, c.site.IgnoreSymlinks)
+}
+
 func (c *Crawler) WalkShallow(path string) ([]ftp.File, error) {
 	return walkShallow(c, path, -1)
 }
@@ -82,6 +87,23 @@ func (c *Crawler) Run() error {
 	}
 	c.Logf("Saved %d directories", len(dirs))
 	return nil
+}
+
+func filterFiles(files []ftp.File, ignore []string, ignoreSymlink bool) []ftp.File {
+	keep := []ftp.File{}
+Loop:
+	for _, f := range files {
+		if ignoreSymlink && f.IsSymlink() {
+			continue
+		}
+		for _, name := range ignore {
+			if f.Name == name {
+				continue Loop
+			}
+		}
+		keep = append(keep, f)
+	}
+	return keep
 }
 
 func makeDirs(files []ftp.File) []database.Dir {
@@ -109,6 +131,7 @@ Loop:
 
 func walkShallow(lister dirLister, path string, maxdepth int) ([]ftp.File, error) {
 	files, err := lister.List(path)
+	files = lister.FilterFiles(files)
 	if err != nil {
 		return nil, err
 	}
@@ -130,6 +153,7 @@ Loop:
 		if err != nil {
 			return nil, err
 		}
+		peek = lister.FilterFiles(peek)
 		for _, f := range peek {
 			if !f.Mode.IsDir() {
 				maxdepth = depth - 1

@@ -24,6 +24,8 @@ type Site struct {
 	Root           string
 	TLS            bool
 	ConnectTimeout time.Duration
+	Ignore         []string
+	IgnoreSymlinks bool
 }
 
 func readConfig(r io.Reader) (Config, error) {
