@@ -59,6 +59,10 @@ func (c *Config) Validate() error {
 	return nil
 }
 
+func (c *Config) JSON() ([]byte, error) {
+	return json.MarshalIndent(c, "", "  ")
+}
+
 func ReadConfig(name string) (Config, error) {
 	f, err := os.Open(name)
 	if err != nil {

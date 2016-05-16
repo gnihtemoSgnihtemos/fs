@@ -26,6 +26,11 @@ func main() {
 		"Search database", &search); err != nil {
 		log.Fatal(err)
 	}
+	var test cmd.Test
+	if _, err := p.AddCommand("test", "Test configuration",
+		"Test and print configuration", &test); err != nil {
+		log.Fatal(err)
+	}
 	if _, err := p.Parse(); err != nil {
 		os.Exit(1)
 	}
