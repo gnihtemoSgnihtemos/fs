@@ -27,6 +27,8 @@ CREATE TABLE IF NOT EXISTS dir (
   FOREIGN KEY(site_id) REFERENCES site(id) ON DELETE CASCADE
 );
 
+CREATE INDEX IF NOT EXISTS dir_site_id_idx ON dir (site_id);
+
 -- FTS index table
 CREATE VIRTUAL TABLE IF NOT EXISTS dir_fts USING fts4(
   id INTEGER PRIMARY KEY,
