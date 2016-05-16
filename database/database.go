@@ -77,10 +77,6 @@ func New(filename string) (*Client, error) {
 	return &Client{db: db}, nil
 }
 
-func (c *Client) Close() error {
-	return c.db.Close()
-}
-
 func (c *Client) insertSite(siteName string) error {
 	tx, err := c.db.Beginx()
 	if err != nil {
