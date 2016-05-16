@@ -78,14 +78,18 @@ func (c *Crawler) WalkShallow(path string) ([]ftp.File, error) {
 }
 
 func (c *Crawler) Run() error {
+	c.Logf("Walking %s", c.site.Root)
 	files, err := c.WalkShallow(c.site.Root)
 	if err != nil {
 		return err
 	}
+	c.Logf("Mapping %d files to directories", len(files))
 	dirs := makeDirs(files)
+	c.Logf("Removing existing directories from database")
 	if err := c.dbClient.DeleteDirs(c.site.Name); err != nil {
 		return err
 	}
+	c.Logf("Inserting %d directories into database", len(dirs))
 	if err := c.dbClient.Insert(c.site.Name, dirs); err != nil {
 		return err
 	}
