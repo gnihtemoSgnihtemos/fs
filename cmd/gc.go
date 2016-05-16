@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"fmt"
 	"log"
 
 	"github.com/martinp/fs/database"
@@ -37,7 +36,7 @@ func (c *GC) Execute(args []string) error {
 	}
 	if c.Dryrun {
 		for _, s := range remove {
-			fmt.Printf("Deleting %s\n", s.Name)
+			log.Printf("Would remove %s\n", s.Name)
 		}
 		return nil
 	}
