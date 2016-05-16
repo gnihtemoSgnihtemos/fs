@@ -40,7 +40,7 @@ CREATE VIRTUAL TABLE IF NOT EXISTS dir_fts USING fts4(
 
 -- Triggers to keep FTS table up to date
 CREATE TRIGGER IF NOT EXISTS dir_bd BEFORE DELETE ON dir BEGIN
-  DELETE FROM dir_fts WHERE id=old.id;
+  DELETE FROM dir_fts WHERE docid=old.rowid;
 END;
 CREATE TRIGGER IF NOT EXISTS dir_ai AFTER INSERT ON dir BEGIN
   INSERT INTO dir_fts(id, site_id, path, name, modified) VALUES (new.id, new.site_id, new.path, new.name, new.modified);
