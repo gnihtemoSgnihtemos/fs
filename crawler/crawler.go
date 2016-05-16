@@ -51,6 +51,10 @@ func (c *Crawler) Connect() error {
 	return nil
 }
 
+func (c *Crawler) Close() error {
+	return c.ftpClient.Quit()
+}
+
 func (c *Crawler) Logf(format string, v ...interface{}) {
 	prefix := fmt.Sprintf("[%s] ", c.site.Name)
 	c.logger.Printf(prefix+format, v...)

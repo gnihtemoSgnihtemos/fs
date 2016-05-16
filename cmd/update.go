@@ -33,6 +33,7 @@ func (c *Update) Execute(args []string) error {
 				c.Logf("Failed to connect: %s", err)
 				return
 			}
+			defer c.Close()
 			if err := c.Run(); err != nil {
 				c.Logf("Failed crawling: %s", err)
 				return
