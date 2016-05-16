@@ -36,13 +36,13 @@ func (c *Search) Execute(args []string) error {
 	keywords := strings.Join(args, " ")
 	var dirs []database.Dir
 	if c.Site == "" {
-		d, err := db.FindDirs(keywords)
+		d, err := db.SelectDirs(keywords)
 		if err != nil {
 			return err
 		}
 		dirs = d
 	} else {
-		d, err := db.FindDirsBySite(keywords, c.Site)
+		d, err := db.SelectDirsSite(c.Site, keywords)
 		if err != nil {
 			return err
 		}
