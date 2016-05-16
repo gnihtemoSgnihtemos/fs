@@ -108,21 +108,14 @@ Loop:
 
 func makeDirs(files []ftp.File) []database.Dir {
 	keep := []database.Dir{}
-Loop:
-	for _, f1 := range files {
-		if f1.IsCurrentOrParent() {
+	for _, f := range files {
+		if f.IsCurrentOrParent() {
 			continue
 		}
-		// Ignore any parent dirs
-		for _, f2 := range files {
-			if filepath.Dir(f2.Path) == f1.Path {
-				continue Loop
-			}
-		}
 		d := database.Dir{
-			Name:     f1.Name,
-			Path:     f1.Path,
-			Modified: f1.Modified.Unix(),
+			Name:     f.Name,
+			Path:     f.Path,
+			Modified: f.Modified.Unix(),
 		}
 		keep = append(keep, d)
 	}
