@@ -33,9 +33,7 @@ CREATE INDEX IF NOT EXISTS dir_site_id_idx ON dir (site_id);
 CREATE VIRTUAL TABLE IF NOT EXISTS dir_fts USING fts4(
   id INTEGER PRIMARY KEY,
   site_id INTEGER,
-  path TEXT,
-  name TEXT,
-  modified INTEGER
+  path TEXT
 );
 
 -- Triggers to keep FTS table up to date
@@ -43,7 +41,7 @@ CREATE TRIGGER IF NOT EXISTS dir_bd BEFORE DELETE ON dir BEGIN
   DELETE FROM dir_fts WHERE docid=old.rowid;
 END;
 CREATE TRIGGER IF NOT EXISTS dir_ai AFTER INSERT ON dir BEGIN
-  INSERT INTO dir_fts(id, site_id, path, name, modified) VALUES (new.id, new.site_id, new.path, new.name, new.modified);
+  INSERT INTO dir_fts(id, site_id, path) VALUES (new.id, new.site_id, new.path);
 END;
 `
 
@@ -159,16 +157,24 @@ func (c *Client) Insert(siteName string, dirs []Dir) error {
 }
 
 func (c *Client) SelectDirs(keywords string) ([]Dir, error) {
+	query := `SELECT site.name AS site, dir_fts.path, dir.name, dir.modified FROM dir_fts
+                  INNER JOIN dir ON dir_fts.id = dir.id
+                  INNER JOIN site ON dir_fts.site_id = site.id
+                  WHERE dir_fts.path MATCH $1`
 	var dirs []Dir
-	if err := c.db.Select(&dirs, "SELECT site.name AS site, path, dir_fts.name, modified FROM dir_fts INNER JOIN site ON site_id = site.id WHERE path MATCH $1", keywords); err != nil {
+	if err := c.db.Select(&dirs, query, keywords); err != nil {
 		return nil, err
 	}
 	return dirs, nil
 }
 
 func (c *Client) SelectDirsSite(site string, keywords string) ([]Dir, error) {
+	query := `SELECT site.name AS site, dir_fts.path, dir.name, dir.modified FROM dir_fts
+                  INNER JOIN dir ON dir_fts.id = dir.id
+                  INNER JOIN site ON dir_fts.site_id = site.id
+                  WHERE dir_fts.path MATCH $1 AND site.name = $2`
 	var dirs []Dir
-	if err := c.db.Select(&dirs, "SELECT site.name AS site, path, dir_fts.name, modified FROM dir_fts INNER JOIN site ON site_id = site.id WHERE path MATCH $1 AND site.name = $2", keywords, site); err != nil {
+	if err := c.db.Select(&dirs, query, keywords, site); err != nil {
 		return nil, err
 	}
 	return dirs, nil
