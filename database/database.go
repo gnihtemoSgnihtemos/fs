@@ -69,7 +69,7 @@ func New(filename string) (*Client, error) {
 	if err != nil {
 		return nil, err
 	}
-	// Enable foregin keys support
+	// Ensure foreign keys are enabled (defaults to off)
 	if _, err := db.Exec("PRAGMA foreign_keys = ON"); err != nil {
 		return nil, err
 	}
@@ -80,20 +80,14 @@ func New(filename string) (*Client, error) {
 }
 
 func (c *Client) insertSite(siteName string) error {
-	tx, err := c.db.Beginx()
-	if err != nil {
-		return err
-	}
-	defer tx.Rollback()
-	if _, err := tx.Exec("INSERT INTO site (name) VALUES ($1)", siteName); err != nil {
-		return err
-	}
-	return tx.Commit()
+	_, err := c.db.Exec("INSERT INTO site (name) VALUES ($1)", siteName)
+	return err
+
 }
 
 func (c *Client) getSite(siteName string) (Site, error) {
 	var site Site
-	err := c.db.Get(&site, "SELECT * FROM site WHERE name=$1", siteName)
+	err := c.db.Get(&site, "SELECT * FROM site WHERE name = $1", siteName)
 	if err == sql.ErrNoRows {
 		if err := c.insertSite(siteName); err != nil {
 			return Site{}, err
@@ -122,7 +116,7 @@ func (c *Client) DeleteSites(sites []Site) error {
 	}
 	defer tx.Rollback()
 	for _, s := range sites {
-		if _, err := tx.Exec("DELETE FROM site WHERE id=$1", s.ID); err != nil {
+		if _, err := tx.Exec("DELETE FROM site WHERE id = $1", s.ID); err != nil {
 			return err
 		}
 	}
