@@ -127,10 +127,10 @@ func (c *Client) DeleteSites(sites []Site) error {
 	return tx.Commit()
 }
 
-func (c *Client) DeleteDirs(site string) error {
+func (c *Client) DeleteSite(site string) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	_, err := c.db.Exec("DELETE FROM dir WHERE site_id IN (SELECT id FROM site WHERE name = $1)", site)
+	_, err := c.db.Exec("DELETE FROM site WHERE name = $1", site)
 	return err
 }
 
