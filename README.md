@@ -20,3 +20,26 @@ Available commands:
   test    Test configuration
   update  Update database
 ```
+
+## Example config
+
+```json
+{
+  "Database": "/path/to/fs.db",
+  "Concurrency": 5,
+  "Default": {
+    "ConnectTimeout": 5,
+    "Root": "/",
+    "TLS": false,
+    "Ignore": [
+    ],
+    "IgnoreSymlinks": true
+  },
+  "Sites": {
+    "Name": "local",
+    "Address": "localhost:21",
+    "Username": "foo",
+    "Password": "bar"
+  }
+}
+```
