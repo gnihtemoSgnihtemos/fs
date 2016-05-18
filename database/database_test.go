@@ -53,10 +53,11 @@ func TestInsertAndDeleteSites(t *testing.T) {
 	var tests = []struct {
 		dirCount  int
 		siteCount int
+		ftsCount  int
 		delete    bool
 	}{
-		{1, 1, false},
-		{0, 0, true},
+		{1, 1, 1, false},
+		{0, 0, 0, true},
 	}
 	for _, tt := range tests {
 		if tt.delete {
@@ -64,7 +65,7 @@ func TestInsertAndDeleteSites(t *testing.T) {
 				t.Fatal(err)
 			}
 		} else {
-			dirs := []Dir{{Name: "dir1"}}
+			dirs := []Dir{{Path: "dir1"}}
 			if err := c.Insert("foo", dirs); err != nil {
 				t.Fatal(err)
 			}
@@ -76,11 +77,17 @@ func TestInsertAndDeleteSites(t *testing.T) {
 		if count != tt.siteCount {
 			t.Errorf("Expected site row count %d, got %d", tt.siteCount, count)
 		}
-		if err := c.db.Get(&count, "SELECT COUNT(*) FROM dir WHERE name = $1", "dir1"); err != nil {
+		if err := c.db.Get(&count, "SELECT COUNT(*) FROM dir WHERE path = $1", "dir1"); err != nil {
 			t.Fatal(err)
 		}
 		if count != tt.dirCount {
 			t.Errorf("Expected dir row count %d, got %d", tt.dirCount, count)
+		}
+		if err := c.db.Get(&count, "SELECT COUNT(*) FROM dir_fts WHERE path MATCH $1", "dir1"); err != nil {
+			t.Fatal(err)
+		}
+		if count != tt.ftsCount {
+			t.Errorf("Expected dir_fts row count %d, got %d", tt.ftsCount, count)
 		}
 	}
 }
