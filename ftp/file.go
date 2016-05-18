@@ -155,7 +155,3 @@ func (f *File) IsCurrentOrParent() bool {
 func (f *File) IsSymlink() bool {
 	return f.Mode&os.ModeSymlink != 0
 }
-
-func (f *File) Age(since time.Time) time.Duration {
-	return since.Round(time.Second).Sub(f.Modified)
-}
