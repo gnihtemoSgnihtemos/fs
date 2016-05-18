@@ -31,15 +31,16 @@ Available commands:
     "ConnectTimeout": 5,
     "Root": "/",
     "TLS": false,
-    "Ignore": [
-    ],
+    "Ignore": [],
     "IgnoreSymlinks": true
   },
-  "Sites": {
-    "Name": "local",
-    "Address": "localhost:21",
-    "Username": "foo",
-    "Password": "bar"
-  }
+  "Sites": [
+    {
+      "Name": "local",
+      "Address": "localhost:21",
+      "Username": "foo",
+      "Password": "bar"
+    }
+  ]
 }
 ```
