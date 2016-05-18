@@ -157,7 +157,8 @@ func (c *Client) SelectDirs(keywords string) ([]Dir, error) {
 	query := `SELECT site.name AS site, dir_fts.path, dir.name, dir.modified FROM dir_fts
                   INNER JOIN dir ON dir_fts.id = dir.id
                   INNER JOIN site ON dir_fts.site_id = site.id
-                  WHERE dir_fts.path MATCH $1`
+                  WHERE dir_fts.path MATCH $1
+                  ORDER BY site.name ASC, dir.modified DESC`
 	var dirs []Dir
 	if err := c.db.Select(&dirs, query, keywords); err != nil {
 		return nil, err
@@ -169,7 +170,8 @@ func (c *Client) SelectDirsSite(site string, keywords string) ([]Dir, error) {
 	query := `SELECT site.name AS site, dir_fts.path, dir.name, dir.modified FROM dir_fts
                   INNER JOIN dir ON dir_fts.id = dir.id
                   INNER JOIN site ON dir_fts.site_id = site.id
-                  WHERE dir_fts.path MATCH $1 AND site.name = $2`
+                  WHERE dir_fts.path MATCH $1 AND site.name = $2
+                  ORDER BY site.name ASC, dir.modified DESC`
 	var dirs []Dir
 	if err := c.db.Select(&dirs, query, keywords, site); err != nil {
 		return nil, err
