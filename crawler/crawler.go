@@ -132,10 +132,10 @@ func makeDirs(files []ftp.File) []database.Dir {
 
 func walkShallow(lister dirLister, path string, maxdepth int) ([]ftp.File, error) {
 	files, err := lister.List(path)
-	files = lister.FilterFiles(files)
 	if err != nil {
 		return nil, err
 	}
+	files = lister.FilterFiles(files)
 Loop:
 	for _, f := range files {
 		if f.IsCurrentOrParent() {
