@@ -122,3 +122,20 @@ func TestIsCurrentOrParent(t *testing.T) {
 		}
 	}
 }
+
+func TestIsSymlink(t *testing.T) {
+	var tests = []struct {
+		in  File
+		out bool
+	}{
+		{File{Mode: os.ModeSymlink}, true},
+		{File{Mode: os.ModeDir}, false},
+		{File{}, false},
+	}
+	for i, tt := range tests {
+		got := tt.in.IsSymlink()
+		if got != tt.out {
+			t.Errorf("File[%d].IsSymlink() => %t, want %t", i, got, tt.out)
+		}
+	}
+}
