@@ -39,9 +39,6 @@ func (c *Search) Execute(args []string) error {
 	if err != nil {
 		return err
 	}
-	if err != nil {
-		return err
-	}
 	if len(dirs) == 0 {
 		return fmt.Errorf("no results found")
 	}

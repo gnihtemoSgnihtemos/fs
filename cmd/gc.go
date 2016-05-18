@@ -30,6 +30,9 @@ func difference(sites []database.Site, configSites []crawler.Site) []string {
 }
 
 func (c *GC) Execute(args []string) error {
+	if len(args) != 0 {
+		return errUnexpectedArgs
+	}
 	cfg := mustReadConfig(c.Config)
 	db, err := database.New(cfg.Database)
 	if err != nil {

@@ -25,3 +25,10 @@ func TestDifference(t *testing.T) {
 		t.Errorf("Site with Name=%q", want)
 	}
 }
+
+func TestGCExecute(t *testing.T) {
+	err := (&GC{}).Execute([]string{"foo"})
+	if err != errUnexpectedArgs {
+		t.Errorf("Expected error: %s", errUnexpectedArgs)
+	}
+}

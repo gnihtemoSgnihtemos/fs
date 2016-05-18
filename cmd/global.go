@@ -1,12 +1,15 @@
 package cmd
 
 import (
+	"errors"
 	"log"
 	"os"
 	"path/filepath"
 
 	"github.com/martinp/fs/crawler"
 )
+
+var errUnexpectedArgs = errors.New("command does not accept any arguments")
 
 type opts struct {
 	Config string `short:"f" long:"config" description:"Config file" value-name:"FILE" default:"~/.fsrc"`
