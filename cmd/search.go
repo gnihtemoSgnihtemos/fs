@@ -16,7 +16,7 @@ type Search struct {
 	Site string `short:"s" long:"site" description:"Search a specific site" value-name:"NAME"`
 }
 
-func (c *Search) WriteTable(dirs []database.Dir, w io.Writer) {
+func (c *Search) writeTable(dirs []database.Dir, w io.Writer) {
 	table := tablewriter.NewWriter(w)
 	table.SetHeader([]string{"Site", "Path", "Date"})
 	for _, d := range dirs {
@@ -54,6 +54,6 @@ func (c *Search) Execute(args []string) error {
 	if len(dirs) == 0 {
 		return fmt.Errorf("no results found")
 	}
-	c.WriteTable(dirs, os.Stdout)
+	c.writeTable(dirs, os.Stdout)
 	return nil
 }
