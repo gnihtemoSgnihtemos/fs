@@ -77,20 +77,14 @@ func New(filename string) (*Client, error) {
 	return &Client{db: db}, nil
 }
 
-func (c *Client) insertSite(siteName string) error {
-	_, err := c.db.Exec("INSERT INTO site (name) VALUES ($1)", siteName)
-	return err
-
-}
-
-func (c *Client) getOrInsertSite(siteName string) (Site, error) {
+func (c *Client) getOrInsertSite(name string) (Site, error) {
 	var site Site
-	err := c.db.Get(&site, "SELECT * FROM site WHERE name = $1", siteName)
+	err := c.db.Get(&site, "SELECT * FROM site WHERE name = $1", name)
 	if err == sql.ErrNoRows {
-		if err := c.insertSite(siteName); err != nil {
+		if _, err := c.db.Exec("INSERT INTO site (name) VALUES ($1)", name); err != nil {
 			return Site{}, err
 		}
-		return c.getOrInsertSite(siteName)
+		return c.getOrInsertSite(name)
 	} else if err != nil {
 		return Site{}, err
 	}
@@ -105,7 +99,7 @@ func (c *Client) GetSites() ([]Site, error) {
 	return sites, nil
 }
 
-func (c *Client) DeleteSites(sites []string) error {
+func (c *Client) DeleteSites(names []string) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	tx, err := c.db.Beginx()
@@ -113,16 +107,16 @@ func (c *Client) DeleteSites(sites []string) error {
 		return err
 	}
 	defer tx.Rollback()
-	for _, s := range sites {
-		if _, err := tx.Exec("DELETE FROM site WHERE name = $1", s); err != nil {
+	for _, n := range names {
+		if _, err := tx.Exec("DELETE FROM site WHERE name = $1", n); err != nil {
 			return err
 		}
 	}
 	return tx.Commit()
 }
 
-func (c *Client) DeleteSite(site string) error {
-	return c.DeleteSites([]string{site})
+func (c *Client) DeleteSite(name string) error {
+	return c.DeleteSites([]string{name})
 }
 
 func (c *Client) Vacuum() error {

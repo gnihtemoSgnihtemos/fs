@@ -30,7 +30,7 @@ func TestGetOrInsertSite(t *testing.T) {
 
 func TestGetSites(t *testing.T) {
 	c := testClient()
-	if err := c.insertSite("foo"); err != nil {
+	if _, err := c.getOrInsertSite("foo"); err != nil {
 		t.Fatal(err)
 	}
 	sites, err := c.GetSites()
