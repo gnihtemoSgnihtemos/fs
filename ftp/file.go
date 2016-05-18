@@ -25,7 +25,7 @@ type File struct {
 	Mode       os.FileMode
 }
 
-func ParseFileMode(s string) (os.FileMode, error) {
+func parseFileMode(s string) (os.FileMode, error) {
 	if len(s) != 10 {
 		return os.FileMode(0), fmt.Errorf("length must be 10")
 	}
@@ -43,7 +43,7 @@ func ParseFileMode(s string) (os.FileMode, error) {
 	return mode, nil
 }
 
-func ParseTime(yearOrTime, month string, day int) (time.Time, error) {
+func parseTime(yearOrTime, month string, day int) (time.Time, error) {
 	m, err := time.Parse("Jan", month)
 	if err != nil {
 		return time.Time{}, err
@@ -90,7 +90,7 @@ func ParseFile(s string) (File, error) {
 	if len(parts) != 9 {
 		return File{}, fmt.Errorf("failed to parse file: %s", s)
 	}
-	fileMode, err := ParseFileMode(parts[0])
+	fileMode, err := parseFileMode(parts[0])
 	if err != nil {
 		return File{}, err
 	}
@@ -108,7 +108,7 @@ func ParseFile(s string) (File, error) {
 	if err != nil {
 		return File{}, err
 	}
-	modified, err := ParseTime(parts[7], parts[5], day)
+	modified, err := parseTime(parts[7], parts[5], day)
 	if err != nil {
 		return File{}, err
 	}

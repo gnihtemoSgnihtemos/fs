@@ -19,7 +19,7 @@ func TestParseFileMode(t *testing.T) {
 		{"-r-xr-xr-x"},
 	}
 	for _, tt := range tests {
-		out, err := ParseFileMode(tt.in)
+		out, err := parseFileMode(tt.in)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -41,7 +41,7 @@ func TestParseTime(t *testing.T) {
 		{21, "Jul", "05:32", time.Date(time.Now().Year(), 7, 21, 5, 32, 0, 0, time.UTC)},
 	}
 	for _, tt := range tests {
-		rv, err := ParseTime(tt.yearOrTime, tt.month, tt.day)
+		rv, err := parseTime(tt.yearOrTime, tt.month, tt.day)
 		if err != nil {
 			t.Fatal(err)
 		}
