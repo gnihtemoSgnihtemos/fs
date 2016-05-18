@@ -13,7 +13,8 @@ import (
 
 type Search struct {
 	opts
-	Site string `short:"s" long:"site" description:"Search a specific site" value-name:"NAME"`
+	Site  string `short:"s" long:"site" description:"Search a specific site" value-name:"NAME"`
+	Limit int    `short:"c" long:"max-count" description:"Maximum number of results to show"`
 }
 
 func (c *Search) writeTable(dirs []database.Dir, w io.Writer) {
@@ -34,19 +35,9 @@ func (c *Search) Execute(args []string) error {
 		return err
 	}
 	keywords := strings.Join(args, " ")
-	var dirs []database.Dir
-	if c.Site == "" {
-		d, err := db.SelectDirs(keywords)
-		if err != nil {
-			return err
-		}
-		dirs = d
-	} else {
-		d, err := db.SelectDirsSite(c.Site, keywords)
-		if err != nil {
-			return err
-		}
-		dirs = d
+	dirs, err := db.SelectDirs(keywords, c.Site, c.Limit)
+	if err != nil {
+		return err
 	}
 	if err != nil {
 		return err

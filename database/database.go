@@ -1,6 +1,7 @@
 package database
 
 import (
+	"fmt"
 	"sync"
 
 	"github.com/jmoiron/sqlx"
@@ -147,27 +148,27 @@ func (c *Client) Insert(siteName string, dirs []Dir) error {
 	return tx.Commit()
 }
 
-func (c *Client) SelectDirs(keywords string) ([]Dir, error) {
+func selectDirsQuery(keywords string, site string, limit int) (string, []interface{}) {
 	query := `SELECT site.name AS site, dir_fts.path, dir.name, dir.modified FROM dir_fts
-                  INNER JOIN dir ON dir_fts.id = dir.id
-                  INNER JOIN site ON dir_fts.site_id = site.id
-                  WHERE dir_fts.path MATCH $1
-                  ORDER BY site.name ASC, dir.modified DESC`
-	var dirs []Dir
-	if err := c.db.Select(&dirs, query, keywords); err != nil {
-		return nil, err
+INNER JOIN dir ON dir_fts.id = dir.id
+INNER JOIN site ON dir_fts.site_id = site.id
+WHERE dir_fts.path MATCH $1`
+	args := []interface{}{keywords}
+	if site != "" {
+		query += " AND site.name = $2"
+		args = append(args, site)
 	}
-	return dirs, nil
+	query += " ORDER BY site.name ASC, dir.modified DESC"
+	if limit > 0 {
+		query += fmt.Sprintf(" LIMIT %d", limit)
+	}
+	return query, args
 }
 
-func (c *Client) SelectDirsSite(site string, keywords string) ([]Dir, error) {
-	query := `SELECT site.name AS site, dir_fts.path, dir.name, dir.modified FROM dir_fts
-                  INNER JOIN dir ON dir_fts.id = dir.id
-                  INNER JOIN site ON dir_fts.site_id = site.id
-                  WHERE dir_fts.path MATCH $1 AND site.name = $2
-                  ORDER BY site.name ASC, dir.modified DESC`
+func (c *Client) SelectDirs(keywords string, site string, limit int) ([]Dir, error) {
+	query, args := selectDirsQuery(keywords, site, limit)
 	var dirs []Dir
-	if err := c.db.Select(&dirs, query, keywords, site); err != nil {
+	if err := c.db.Select(&dirs, query, args...); err != nil {
 		return nil, err
 	}
 	return dirs, nil

@@ -1,6 +1,9 @@
 package database
 
-import "testing"
+import (
+	"reflect"
+	"testing"
+)
 
 func testClient() *Client {
 	c, err := New(":memory:")
@@ -82,6 +85,35 @@ func TestInsertAndDeleteSites(t *testing.T) {
 	}
 }
 
+func TestSelectDirsQuery(t *testing.T) {
+	var tests = []struct {
+		keywords string
+		site     string
+		limit    int
+		query    string
+		args     []interface{}
+	}{
+		{"foo", "", 0, `SELECT site.name AS site, dir_fts.path, dir.name, dir.modified FROM dir_fts
+INNER JOIN dir ON dir_fts.id = dir.id
+INNER JOIN site ON dir_fts.site_id = site.id
+WHERE dir_fts.path MATCH $1 ORDER BY site.name ASC, dir.modified DESC`, []interface{}{"foo"}},
+		{"foo", "bar", 0, `SELECT site.name AS site, dir_fts.path, dir.name, dir.modified FROM dir_fts
+INNER JOIN dir ON dir_fts.id = dir.id
+INNER JOIN site ON dir_fts.site_id = site.id
+WHERE dir_fts.path MATCH $1 AND site.name = $2 ORDER BY site.name ASC, dir.modified DESC`, []interface{}{"foo", "bar"}},
+		{"foo", "", 10, `SELECT site.name AS site, dir_fts.path, dir.name, dir.modified FROM dir_fts
+INNER JOIN dir ON dir_fts.id = dir.id
+INNER JOIN site ON dir_fts.site_id = site.id
+WHERE dir_fts.path MATCH $1 ORDER BY site.name ASC, dir.modified DESC LIMIT 10`, []interface{}{"foo"}},
+	}
+	for _, tt := range tests {
+		query, args := selectDirsQuery(tt.keywords, tt.site, tt.limit)
+		if query != tt.query || !reflect.DeepEqual(args, tt.args) {
+			t.Errorf("selectDirsQuery(%q, %q, %d) => (%q, %q), want (%q, %q)", tt.keywords, tt.site, tt.limit, query, args, tt.query, tt.args)
+		}
+	}
+}
+
 func TestSelectDirs(t *testing.T) {
 	c := testClient()
 	if err := c.Insert("site1", []Dir{{Path: "/dir/foo"}, {Path: "/dir/bar"}}); err != nil {
@@ -90,18 +122,23 @@ func TestSelectDirs(t *testing.T) {
 	if err := c.Insert("site2", []Dir{{Path: "/dir/foo"}, {Path: "/dir/bar"}}); err != nil {
 		t.Fatal(err)
 	}
-	dirs, err := c.SelectDirs("foo")
-	if err != nil {
-		t.Fatal(err)
+	var tests = []struct {
+		keywords string
+		site     string
+		limit    int
+		out      int
+	}{
+		{"foo", "", 0, 2},
+		{"foo", "site2", 0, 1},
+		{"foo", "", 1, 1},
 	}
-	if got := len(dirs); got != 2 {
-		t.Errorf("Expected 2 rows, got %d", got)
-	}
-	dirs, err = c.SelectDirsSite("site2", "foo")
-	if err != nil {
-		t.Fatal(err)
-	}
-	if got := len(dirs); got != 1 {
-		t.Errorf("Expected 1 rows, got %d", got)
+	for _, tt := range tests {
+		dirs, err := c.SelectDirs(tt.keywords, tt.site, tt.limit)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if got := len(dirs); got != tt.out {
+			t.Errorf("Expected %d row(s), got %d", tt.out, got)
+		}
 	}
 }
