@@ -12,7 +12,7 @@ type opts struct {
 	Config string `short:"f" long:"config" description:"Config file" value-name:"FILE" default:"~/.fsrc"`
 }
 
-func readConfig(name string) crawler.Config {
+func mustReadConfig(name string) crawler.Config {
 	if name == "~/.fsrc" {
 		home := os.Getenv("HOME")
 		name = filepath.Join(home, ".fsrc")

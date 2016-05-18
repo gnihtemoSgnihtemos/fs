@@ -14,7 +14,7 @@ type Update struct {
 }
 
 func (c *Update) Execute(args []string) error {
-	cfg := readConfig(c.Config)
+	cfg := mustReadConfig(c.Config)
 	db, err := database.New(cfg.Database)
 	if err != nil {
 		return err
