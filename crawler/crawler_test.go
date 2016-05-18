@@ -25,28 +25,12 @@ func (l *testLister) List(path string) ([]ftp.File, error) {
 			{Name: "baz-dir", Mode: os.ModeDir},
 		}, nil
 	}
-	if path == "/foo/bar/bax" {
-		return []ftp.File{
-			{Name: ".", Mode: os.ModeDir},
-			{Name: "..", Mode: os.ModeDir},
-			{Name: "bax-regular"},
-			{Name: "bax-dir", Mode: os.ModeDir},
-		}, nil
-	}
 	if path == "/foo/baz/def" {
 		return []ftp.File{
 			{Name: ".", Mode: os.ModeDir},
 			{Name: "..", Mode: os.ModeDir},
 			{Name: "def-regular"},
 			{Name: "def-dir", Mode: os.ModeDir},
-		}, nil
-	}
-	if path == "/foo/baz/xyz" {
-		return []ftp.File{
-			{Name: ".", Mode: os.ModeDir},
-			{Name: "..", Mode: os.ModeDir},
-			{Name: "xyz-regular"},
-			{Name: "xyz-dir", Mode: os.ModeDir},
 		}, nil
 	}
 	if path == "/foo/bar" {
