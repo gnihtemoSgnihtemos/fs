@@ -1,6 +1,7 @@
 package crawler
 
 import (
+	"fmt"
 	"os"
 	"reflect"
 	"testing"
@@ -17,28 +18,28 @@ func (l *testLister) FilterFiles(files []ftp.File) []ftp.File {
 }
 
 func (l *testLister) List(path string) ([]ftp.File, error) {
-	if path == "/foo/bar/baz" {
+	if path == "/foo/bar/bar1" {
 		return []ftp.File{
 			{Name: ".", Mode: os.ModeDir},
 			{Name: "..", Mode: os.ModeDir},
-			{Name: "baz-regular"},
-			{Name: "baz-dir", Mode: os.ModeDir},
+			{Name: "bar1-regular"},
+			{Name: "bar1-dir", Mode: os.ModeDir},
 		}, nil
 	}
-	if path == "/foo/baz/def" {
+	if path == "/foo/baz/baz1" {
 		return []ftp.File{
 			{Name: ".", Mode: os.ModeDir},
 			{Name: "..", Mode: os.ModeDir},
-			{Name: "def-regular"},
-			{Name: "def-dir", Mode: os.ModeDir},
+			{Name: "baz1-regular"},
+			{Name: "baz1-dir", Mode: os.ModeDir},
 		}, nil
 	}
 	if path == "/foo/bar" {
 		return []ftp.File{
 			{Name: ".", Mode: os.ModeDir},
 			{Name: "..", Mode: os.ModeDir},
-			{Name: "baz", Mode: os.ModeDir},
-			{Name: "bax", Mode: os.ModeDir},
+			{Name: "bar1", Mode: os.ModeDir},
+			{Name: "bar2", Mode: os.ModeDir},
 			{Name: "_foo", Mode: os.ModeDir},
 			{Name: "_baz", Mode: os.ModeDir},
 			{Name: "_bax", Mode: os.ModeSymlink},
@@ -48,8 +49,8 @@ func (l *testLister) List(path string) ([]ftp.File, error) {
 		return []ftp.File{
 			{Name: ".", Mode: os.ModeDir},
 			{Name: "..", Mode: os.ModeDir},
-			{Name: "def", Mode: os.ModeDir},
-			{Name: "xyz", Mode: os.ModeDir},
+			{Name: "baz1", Mode: os.ModeDir},
+			{Name: "baz2", Mode: os.ModeDir},
 		}, nil
 	}
 	if path == "/foo" {
@@ -60,11 +61,14 @@ func (l *testLister) List(path string) ([]ftp.File, error) {
 			{Name: "baz", Mode: os.ModeDir},
 		}, nil
 	}
-	return []ftp.File{
-		{Name: ".", Mode: os.ModeDir},
-		{Name: "..", Mode: os.ModeDir},
-		{Name: "foo", Mode: os.ModeDir},
-	}, nil
+	if path == "/" {
+		return []ftp.File{
+			{Name: ".", Mode: os.ModeDir},
+			{Name: "..", Mode: os.ModeDir},
+			{Name: "foo", Mode: os.ModeDir},
+		}, nil
+	}
+	return nil, fmt.Errorf("unknown path: %s", path)
 }
 
 func TestWalk(t *testing.T) {
@@ -78,12 +82,12 @@ func TestWalk(t *testing.T) {
 		{Name: "baz", Mode: os.ModeDir},
 		{Name: ".", Mode: os.ModeDir},
 		{Name: "..", Mode: os.ModeDir},
-		{Name: "baz", Mode: os.ModeDir},
-		{Name: "bax", Mode: os.ModeDir},
+		{Name: "bar1", Mode: os.ModeDir},
+		{Name: "bar2", Mode: os.ModeDir},
 		{Name: ".", Mode: os.ModeDir},
 		{Name: "..", Mode: os.ModeDir},
-		{Name: "def", Mode: os.ModeDir},
-		{Name: "xyz", Mode: os.ModeDir},
+		{Name: "baz1", Mode: os.ModeDir},
+		{Name: "baz2", Mode: os.ModeDir},
 	}
 	got, err := walkShallow(&testLister{}, "/", -1)
 	if err != nil {
