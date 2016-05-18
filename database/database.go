@@ -83,14 +83,14 @@ func (c *Client) insertSite(siteName string) error {
 
 }
 
-func (c *Client) getSite(siteName string) (Site, error) {
+func (c *Client) getOrInsertSite(siteName string) (Site, error) {
 	var site Site
 	err := c.db.Get(&site, "SELECT * FROM site WHERE name = $1", siteName)
 	if err == sql.ErrNoRows {
 		if err := c.insertSite(siteName); err != nil {
 			return Site{}, err
 		}
-		return c.getSite(siteName)
+		return c.getOrInsertSite(siteName)
 	} else if err != nil {
 		return Site{}, err
 	}
@@ -105,7 +105,7 @@ func (c *Client) GetSites() ([]Site, error) {
 	return sites, nil
 }
 
-func (c *Client) DeleteSites(sites []Site) error {
+func (c *Client) DeleteSites(sites []string) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	tx, err := c.db.Beginx()
@@ -114,7 +114,7 @@ func (c *Client) DeleteSites(sites []Site) error {
 	}
 	defer tx.Rollback()
 	for _, s := range sites {
-		if _, err := tx.Exec("DELETE FROM site WHERE id = $1", s.ID); err != nil {
+		if _, err := tx.Exec("DELETE FROM site WHERE name = $1", s); err != nil {
 			return err
 		}
 	}
@@ -122,10 +122,7 @@ func (c *Client) DeleteSites(sites []Site) error {
 }
 
 func (c *Client) DeleteSite(site string) error {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	_, err := c.db.Exec("DELETE FROM site WHERE name = $1", site)
-	return err
+	return c.DeleteSites([]string{site})
 }
 
 func (c *Client) Vacuum() error {
@@ -139,7 +136,7 @@ func (c *Client) Insert(siteName string, dirs []Dir) error {
 	// Ensure writes to SQLite db are serialized
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	site, err := c.getSite(siteName)
+	site, err := c.getOrInsertSite(siteName)
 	if err != nil {
 		return err
 	}

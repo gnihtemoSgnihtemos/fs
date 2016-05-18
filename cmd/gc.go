@@ -12,8 +12,8 @@ type GC struct {
 	Dryrun bool `short:"n" long:"dry-run" description:"Only show what would be deleted"`
 }
 
-func difference(sites []database.Site, configSites []crawler.Site) []database.Site {
-	var diff []database.Site
+func difference(sites []database.Site, configSites []crawler.Site) []string {
+	var diff []string
 	for _, s1 := range sites {
 		found := false
 		for _, s2 := range configSites {
@@ -23,7 +23,7 @@ func difference(sites []database.Site, configSites []crawler.Site) []database.Si
 			}
 		}
 		if !found {
-			diff = append(diff, s1)
+			diff = append(diff, s1.Name)
 		}
 	}
 	return diff
@@ -42,7 +42,7 @@ func (c *GC) Execute(args []string) error {
 	remove := difference(sites, cfg.Sites)
 	if c.Dryrun {
 		for _, s := range remove {
-			log.Printf("Would remove %s\n", s.Name)
+			log.Printf("Would remove %s\n", s)
 		}
 		return nil
 	}

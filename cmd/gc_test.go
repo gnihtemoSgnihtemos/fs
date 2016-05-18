@@ -18,10 +18,10 @@ func TestDifference(t *testing.T) {
 	if got := len(diff); got != 2 {
 		t.Fatalf("Expected 2 sites, got %d", got)
 	}
-	if want := "bar"; diff[0].Name != want {
+	if want := "bar"; diff[0] != want {
 		t.Errorf("Site with Name=%q", want)
 	}
-	if want := "baz"; diff[1].Name != want {
+	if want := "baz"; diff[1] != want {
 		t.Errorf("Site with Name=%q", want)
 	}
 }
