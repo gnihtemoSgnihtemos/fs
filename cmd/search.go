@@ -5,6 +5,7 @@ import (
 	"io"
 	"os"
 	"strings"
+	"text/tabwriter"
 	"time"
 
 	"github.com/martinp/fs/database"
@@ -13,11 +14,12 @@ import (
 
 type Search struct {
 	opts
-	Site  string `short:"s" long:"site" description:"Search a specific site" value-name:"NAME"`
-	Limit int    `short:"c" long:"max-count" description:"Maximum number of results to show"`
+	Site   string `short:"s" long:"site" description:"Search a specific site" value-name:"NAME"`
+	Limit  int    `short:"c" long:"max-count" description:"Maximum number of results to show"`
+	Format string `short:"F" long:"format" description:"Format to use when printing results" choice:"table" choice:"simple" default:"table"`
 }
 
-func (c *Search) writeTable(dirs []database.Dir, w io.Writer) {
+func (c *Search) writeTable(dirs []database.Dir, w io.Writer) error {
 	table := tablewriter.NewWriter(w)
 	table.SetHeader([]string{"Site", "Path", "Date"})
 	for _, d := range dirs {
@@ -26,6 +28,16 @@ func (c *Search) writeTable(dirs []database.Dir, w io.Writer) {
 		table.Append(row)
 	}
 	table.Render()
+	return nil
+}
+
+func (c *Search) writeSimple(dirs []database.Dir, w io.Writer) error {
+	tab := tabwriter.NewWriter(w, 0, 8, 0, '\t', 0)
+	fmt.Fprintln(tab, "SITE\tPATH\tDATE")
+	for _, d := range dirs {
+		fmt.Fprintf(tab, "%s\t%s\t%d\n", d.Site, d.Path, d.Modified)
+	}
+	return tab.Flush()
 }
 
 func (c *Search) Execute(args []string) error {
@@ -42,6 +54,8 @@ func (c *Search) Execute(args []string) error {
 	if len(dirs) == 0 {
 		return fmt.Errorf("no results found")
 	}
-	c.writeTable(dirs, os.Stdout)
-	return nil
+	if c.Format == "table" {
+		return c.writeTable(dirs, os.Stdout)
+	}
+	return c.writeSimple(dirs, os.Stdout)
 }
