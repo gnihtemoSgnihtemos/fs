@@ -1,28 +1,19 @@
 package cmd
 
-import (
-	"testing"
-
-	"github.com/martinp/fs/crawler"
-	"github.com/martinp/fs/database"
-)
+import "testing"
 
 func TestDifference(t *testing.T) {
-	sites := []database.Site{
-		{Name: "foo"},
-		{Name: "bar"},
-		{Name: "baz"},
-	}
-	configSites := []crawler.Site{{Name: "foo"}}
-	diff := difference(sites, configSites)
+	a := []string{"foo", "bar", "baz"}
+	b := []string{"foo"}
+	diff := difference(a, b)
 	if got := len(diff); got != 2 {
 		t.Fatalf("Expected 2 sites, got %d", got)
 	}
 	if want := "bar"; diff[0] != want {
-		t.Errorf("Site with Name=%q", want)
+		t.Errorf("diff[0] = %q, want %q", diff[0], want)
 	}
 	if want := "baz"; diff[1] != want {
-		t.Errorf("Site with Name=%q", want)
+		t.Errorf("diff[1] = %q, want %q", diff[1], want)
 	}
 }
 

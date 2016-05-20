@@ -3,27 +3,27 @@ package cmd
 import (
 	"log"
 
-	"github.com/martinp/fs/crawler"
 	"github.com/martinp/fs/database"
 )
 
 type GC struct {
 	opts
-	Dryrun bool `short:"n" long:"dry-run" description:"Only show what would be deleted"`
+	Dryrun  bool     `short:"n" long:"dry-run" description:"Only show what would be deleted"`
+	Exclude []string `short:"e" long:"exclude" description:"Exclude sites" value-name:"SITES"`
 }
 
-func difference(sites []database.Site, configSites []crawler.Site) []string {
+func difference(ss1 []string, ss2 []string) []string {
 	var diff []string
-	for _, s1 := range sites {
+	for _, s1 := range ss1 {
 		found := false
-		for _, s2 := range configSites {
-			if s1.Name == s2.Name {
+		for _, s2 := range ss2 {
+			if s1 == s2 {
 				found = true
 				break
 			}
 		}
 		if !found {
-			diff = append(diff, s1.Name)
+			diff = append(diff, s1)
 		}
 	}
 	return diff
@@ -42,7 +42,15 @@ func (c *GC) Execute(args []string) error {
 	if err != nil {
 		return err
 	}
-	remove := difference(sites, cfg.Sites)
+	var dbSites []string
+	for _, s := range sites {
+		dbSites = append(dbSites, s.Name)
+	}
+	var cfgSites []string
+	for _, s := range cfg.Sites {
+		cfgSites = append(cfgSites, s.Name)
+	}
+	remove := difference(difference(dbSites, cfgSites), c.Exclude)
 	if c.Dryrun {
 		for _, s := range remove {
 			log.Printf("Would remove %s\n", s)
