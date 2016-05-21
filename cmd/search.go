@@ -16,10 +16,10 @@ type Search struct {
 	opts
 	Site   string `short:"s" long:"site" description:"Search a specific site" value-name:"NAME"`
 	Limit  int    `short:"c" long:"max-count" description:"Maximum number of results to show"`
-	Format string `short:"F" long:"format" description:"Format to use when printing results" choice:"table" choice:"simple" default:"table"`
+	Format string `short:"F" long:"format" description:"Format to use when printing results" choice:"table" choice:"simple" choice:"path" default:"table"`
 }
 
-func (c *Search) writeTable(dirs []database.Dir, w io.Writer) error {
+func (c *Search) writeTable(w io.Writer, dirs []database.Dir) error {
 	table := tablewriter.NewWriter(w)
 	table.SetHeader([]string{"Site", "Path", "Date"})
 	for _, d := range dirs {
@@ -31,13 +31,20 @@ func (c *Search) writeTable(dirs []database.Dir, w io.Writer) error {
 	return nil
 }
 
-func (c *Search) writeSimple(dirs []database.Dir, w io.Writer) error {
+func (c *Search) writeSimple(w io.Writer, dirs []database.Dir) error {
 	tab := tabwriter.NewWriter(w, 0, 8, 0, '\t', 0)
 	fmt.Fprintln(tab, "SITE\tPATH\tDATE")
 	for _, d := range dirs {
 		fmt.Fprintf(tab, "%s\t%s\t%d\n", d.Site, d.Path, d.Modified)
 	}
 	return tab.Flush()
+}
+
+func (c *Search) writePath(w io.Writer, dirs []database.Dir) error {
+	for _, d := range dirs {
+		fmt.Fprintln(w, d.Path)
+	}
+	return nil
 }
 
 func (c *Search) Execute(args []string) error {
@@ -54,8 +61,11 @@ func (c *Search) Execute(args []string) error {
 	if len(dirs) == 0 {
 		return fmt.Errorf("no results found")
 	}
-	if c.Format == "table" {
-		return c.writeTable(dirs, os.Stdout)
+	switch c.Format {
+	case "simple":
+		return c.writeSimple(os.Stdout, dirs)
+	case "path":
+		return c.writePath(os.Stdout, dirs)
 	}
-	return c.writeSimple(dirs, os.Stdout)
+	return c.writeTable(os.Stdout, dirs)
 }
