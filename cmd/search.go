@@ -19,7 +19,7 @@ type Search struct {
 	Format string `short:"F" long:"format" description:"Format to use when printing results" choice:"table" choice:"simple" choice:"path" default:"table"`
 }
 
-func (c *Search) writeTable(w io.Writer, dirs []database.Dir) error {
+func writeTable(w io.Writer, dirs []database.Dir) error {
 	table := tablewriter.NewWriter(w)
 	table.SetHeader([]string{"Site", "Path", "Date"})
 	for _, d := range dirs {
@@ -31,7 +31,7 @@ func (c *Search) writeTable(w io.Writer, dirs []database.Dir) error {
 	return nil
 }
 
-func (c *Search) writeSimple(w io.Writer, dirs []database.Dir) error {
+func writeSimple(w io.Writer, dirs []database.Dir) error {
 	tab := tabwriter.NewWriter(w, 0, 8, 0, '\t', 0)
 	fmt.Fprintln(tab, "SITE\tPATH\tDATE")
 	for _, d := range dirs {
@@ -40,7 +40,7 @@ func (c *Search) writeSimple(w io.Writer, dirs []database.Dir) error {
 	return tab.Flush()
 }
 
-func (c *Search) writePath(w io.Writer, dirs []database.Dir) error {
+func writePath(w io.Writer, dirs []database.Dir) error {
 	for _, d := range dirs {
 		fmt.Fprintln(w, d.Path)
 	}
@@ -63,9 +63,9 @@ func (c *Search) Execute(args []string) error {
 	}
 	switch c.Format {
 	case "simple":
-		return c.writeSimple(os.Stdout, dirs)
+		return writeSimple(os.Stdout, dirs)
 	case "path":
-		return c.writePath(os.Stdout, dirs)
+		return writePath(os.Stdout, dirs)
 	}
-	return c.writeTable(os.Stdout, dirs)
+	return writeTable(os.Stdout, dirs)
 }
