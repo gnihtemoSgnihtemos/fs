@@ -72,12 +72,9 @@ func (c *Client) Quit() error {
 }
 
 func (c *Client) Login(user, pass string) error {
-	code, message, err := c.Cmd(0, "USER %s", user)
-	if err != nil || code == 230 { // 230 = User logged in, proceed.
+	_, _, err := c.Cmd(331, "USER %s", user)
+	if err != nil {
 		return err
-	}
-	if code != 331 { // 331 = User name okay, need password.
-		return &textproto.Error{Code: code, Msg: message}
 	}
 	_, _, err = c.Cmd(230, "PASS %s", pass)
 	return err
