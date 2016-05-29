@@ -23,6 +23,7 @@ type Site struct {
 	Password       string
 	Root           string
 	TLS            bool
+	Skip           bool
 	ConnectTimeout time.Duration
 	Ignore         []string
 	IgnoreSymlinks bool

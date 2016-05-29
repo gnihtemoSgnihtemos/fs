@@ -28,6 +28,9 @@ func (c *Update) Execute(args []string) error {
 		if c.Site != "" && c.Site != site.Name {
 			continue
 		}
+		if site.Skip {
+			continue
+		}
 		sem <- true
 		go func(site crawler.Site) {
 			defer func() { <-sem }()
