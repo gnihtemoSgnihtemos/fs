@@ -2,6 +2,7 @@ package database
 
 import (
 	"fmt"
+	"strings"
 	"sync"
 
 	"github.com/jmoiron/sqlx"
@@ -148,7 +149,32 @@ func (c *Client) Insert(siteName string, dirs []Dir) error {
 	return tx.Commit()
 }
 
-func selectDirsQuery(keywords string, site string, limit int) (string, []interface{}) {
+func OrderByClause(s string) (string, error) {
+	parts := strings.SplitN(s, ":", 2)
+	if len(parts) == 0 {
+		return "", fmt.Errorf("could not parse order: %s", s)
+	}
+	field := parts[0]
+	order := ""
+	if len(parts) == 2 {
+		order = parts[1]
+	}
+	orderUpper := strings.ToUpper(order)
+	switch orderUpper {
+	case "":
+	case "ASC":
+	case "DESC":
+		break
+	default:
+		return "", fmt.Errorf("invalid order: %s", order)
+	}
+	if order == "" {
+		return field, nil
+	}
+	return field + " " + orderUpper, nil
+}
+
+func selectDirsQuery(keywords, site, order string, limit int) (string, []interface{}) {
 	query := `SELECT site.name AS site, dir_fts.path, dir.name, dir.modified FROM dir_fts
 INNER JOIN dir ON dir_fts.id = dir.id
 INNER JOIN site ON dir_fts.site_id = site.id
@@ -158,15 +184,17 @@ WHERE dir_fts.path MATCH $1`
 		query += " AND site.name = $2"
 		args = append(args, site)
 	}
-	query += " ORDER BY site.name ASC, dir.modified DESC"
+	if order != "" {
+		query += " ORDER BY " + order
+	}
 	if limit > 0 {
 		query += fmt.Sprintf(" LIMIT %d", limit)
 	}
 	return query, args
 }
 
-func (c *Client) SelectDirs(keywords string, site string, limit int) ([]Dir, error) {
-	query, args := selectDirsQuery(keywords, site, limit)
+func (c *Client) SelectDirs(keywords, site, order string, limit int) ([]Dir, error) {
+	query, args := selectDirsQuery(keywords, site, order, limit)
 	var dirs []Dir
 	if err := c.db.Select(&dirs, query, args...); err != nil {
 		return nil, err
