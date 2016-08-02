@@ -128,6 +128,13 @@ func (c *Client) Vacuum() error {
 	return err
 }
 
+func (c *Client) Optimize() error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	_, err := c.db.Exec("INSERT INTO dir_fts (dir_fts) VALUES ('optimize')")
+	return err
+}
+
 func (c *Client) Insert(siteName string, dirs []Dir) error {
 	// Ensure writes to SQLite db are serialized
 	c.mu.Lock()

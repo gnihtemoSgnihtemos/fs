@@ -61,6 +61,10 @@ func (c *GC) Execute(args []string) error {
 	if err := db.DeleteSites(remove); err != nil {
 		return err
 	}
-	log.Print("Running vacuum")
+	log.Print("Optimizing FTS table")
+	if err := db.Optimize(); err != nil {
+		return err
+	}
+	log.Print("Rebuilding database")
 	return db.Vacuum()
 }
