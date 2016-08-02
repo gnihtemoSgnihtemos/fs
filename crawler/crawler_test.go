@@ -104,13 +104,10 @@ func TestMakeDirs(t *testing.T) {
 		{Path: "/foo", Name: ".."},
 		{Path: "/foo", Name: "foo"},
 	}
-	want := database.Dir{Path: "/foo", Name: "foo"}
+	want := database.Dir{Path: "/foo"}
 	got := makeDirs(files)
 	if len(got) == 0 {
 		t.Fatal("expected non-zero length")
-	}
-	if got[0].Name != want.Name {
-		t.Errorf("got Name=%q, want Name=%q", got[0].Name, want.Name)
 	}
 	if got[0].Path != want.Path {
 		t.Errorf("got Path=%q, want Path=%q", got[0].Path, want.Path)

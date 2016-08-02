@@ -121,7 +121,6 @@ func makeDirs(files []ftp.File) []database.Dir {
 			continue
 		}
 		d := database.Dir{
-			Name:     f.Name,
 			Path:     f.Path,
 			Modified: f.Modified.Unix(),
 		}

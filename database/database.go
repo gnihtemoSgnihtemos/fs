@@ -23,7 +23,6 @@ CREATE TABLE IF NOT EXISTS dir (
   id INTEGER PRIMARY KEY,
   site_id INTEGER,
   path TEXT,
-  name TEXT,
   modified INTEGER,
   CONSTRAINT path_unique UNIQUE(site_id, path),
   FOREIGN KEY(site_id) REFERENCES site(id) ON DELETE CASCADE
@@ -55,7 +54,6 @@ type Site struct {
 type Dir struct {
 	Site     string `db:"site"`
 	Path     string `db:"path"`
-	Name     string `db:"name"`
 	Modified int64  `db:"modified"`
 }
 
@@ -149,7 +147,7 @@ func (c *Client) Insert(siteName string, dirs []Dir) error {
 	}
 	defer tx.Rollback()
 	for _, d := range dirs {
-		if _, err := tx.Exec("INSERT INTO dir (site_id, path, name, modified) VALUES ($1, $2, $3, $4)", site.ID, d.Path, d.Name, d.Modified); err != nil {
+		if _, err := tx.Exec("INSERT INTO dir (site_id, path, modified) VALUES ($1, $2, $3)", site.ID, d.Path, d.Modified); err != nil {
 			return err
 		}
 	}
@@ -182,7 +180,7 @@ func OrderByClause(s string) (string, error) {
 }
 
 func selectDirsQuery(keywords, site, order string, limit int) (string, []interface{}) {
-	query := `SELECT site.name AS site, dir_fts.path, dir.name, dir.modified FROM dir_fts
+	query := `SELECT site.name AS site, dir_fts.path, dir.modified FROM dir_fts
 INNER JOIN dir ON dir_fts.id = dir.id
 INNER JOIN site ON dir_fts.site_id = site.id
 WHERE dir_fts.path MATCH $1`

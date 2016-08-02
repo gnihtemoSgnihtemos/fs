@@ -100,15 +100,15 @@ func TestSelectDirsQuery(t *testing.T) {
 		query    string
 		args     []interface{}
 	}{
-		{"foo", "", 0, `SELECT site.name AS site, dir_fts.path, dir.name, dir.modified FROM dir_fts
+		{"foo", "", 0, `SELECT site.name AS site, dir_fts.path, dir.modified FROM dir_fts
 INNER JOIN dir ON dir_fts.id = dir.id
 INNER JOIN site ON dir_fts.site_id = site.id
 WHERE dir_fts.path MATCH $1 ORDER BY site.name ASC, dir.modified DESC`, []interface{}{"foo"}},
-		{"foo", "bar", 0, `SELECT site.name AS site, dir_fts.path, dir.name, dir.modified FROM dir_fts
+		{"foo", "bar", 0, `SELECT site.name AS site, dir_fts.path, dir.modified FROM dir_fts
 INNER JOIN dir ON dir_fts.id = dir.id
 INNER JOIN site ON dir_fts.site_id = site.id
 WHERE dir_fts.path MATCH $1 AND site.name = $2 ORDER BY site.name ASC, dir.modified DESC`, []interface{}{"foo", "bar"}},
-		{"foo", "", 10, `SELECT site.name AS site, dir_fts.path, dir.name, dir.modified FROM dir_fts
+		{"foo", "", 10, `SELECT site.name AS site, dir_fts.path, dir.modified FROM dir_fts
 INNER JOIN dir ON dir_fts.id = dir.id
 INNER JOIN site ON dir_fts.site_id = site.id
 WHERE dir_fts.path MATCH $1 ORDER BY site.name ASC, dir.modified DESC LIMIT 10`, []interface{}{"foo"}},
