@@ -15,15 +15,15 @@ const schema = `
 -- Tables for sites and dirs
 CREATE TABLE IF NOT EXISTS site (
   id INTEGER PRIMARY KEY,
-  name TEXT,
+  name TEXT NOT NULL,
   CONSTRAINT name_unique UNIQUE (name)
 );
 
 CREATE TABLE IF NOT EXISTS dir (
   id INTEGER PRIMARY KEY,
-  site_id INTEGER,
-  path TEXT,
-  modified INTEGER,
+  site_id INTEGER NOT NULL,
+  path TEXT NOT NULL,
+  modified INTEGER NOT NULL,
   CONSTRAINT path_unique UNIQUE(site_id, path),
   FOREIGN KEY(site_id) REFERENCES site(id) ON DELETE CASCADE
 );
@@ -33,14 +33,15 @@ CREATE INDEX IF NOT EXISTS dir_site_id_idx ON dir (site_id);
 -- FTS index table
 CREATE VIRTUAL TABLE IF NOT EXISTS dir_fts USING fts4(
   id INTEGER PRIMARY KEY,
-  site_id INTEGER,
-  path TEXT
+  site_id INTEGER NOT NULL,
+  path TEXT NOT NULL
 );
 
 -- Triggers to keep FTS table up to date
 CREATE TRIGGER IF NOT EXISTS dir_bd BEFORE DELETE ON dir BEGIN
   DELETE FROM dir_fts WHERE docid=old.rowid;
 END;
+
 CREATE TRIGGER IF NOT EXISTS dir_ai AFTER INSERT ON dir BEGIN
   INSERT INTO dir_fts(id, site_id, path) VALUES (new.id, new.site_id, new.path);
 END;
