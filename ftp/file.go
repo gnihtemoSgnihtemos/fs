@@ -131,6 +131,9 @@ func ParseFiles(path string, r io.Reader) ([]File, error) {
 		if len(line) == 0 {
 			continue
 		}
+		if strings.HasPrefix(line, "213") {
+			continue
+		}
 		parts := strings.Split(line, " ")
 		if len(parts) < 9 {
 			continue

@@ -106,6 +106,17 @@ drwxrwxrwx  72 foo   bar      94208 May 15 01:03 dir3
 	}
 }
 
+func TestParseFilesSkipsLinesWithReturnCodes(t *testing.T) {
+	message := "213- status of -al /a b c d e f:"
+	files, err := ParseFiles("/", strings.NewReader(message))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := len(files); got != 0 {
+		t.Errorf("got %d, want %d", got, 0)
+	}
+}
+
 func TestIsCurrentOrParent(t *testing.T) {
 	var tests = []struct {
 		in  string
