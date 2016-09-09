@@ -34,15 +34,17 @@ func readConfig(r io.Reader) (Config, error) {
 	if err != nil {
 		return Config{}, err
 	}
-	// Unmarshal config and replace every path with the default one
+	// Unmarshal config and replace every site with the default one
 	var defaults Config
 	if err := json.Unmarshal(data, &defaults); err != nil {
 		return Config{}, err
 	}
 	for i, _ := range defaults.Sites {
 		defaults.Sites[i] = defaults.Default
+		defaults.Sites[i].Ignore = make([]string, len(defaults.Default.Ignore))
+		copy(defaults.Sites[i].Ignore, defaults.Default.Ignore)
 	}
-	// Unmarshal config again, letting individual paths override the defaults
+	// Unmarshal config again, letting individual sites override the defaults
 	cfg := defaults
 	if err := json.Unmarshal(data, &cfg); err != nil {
 		return Config{}, err

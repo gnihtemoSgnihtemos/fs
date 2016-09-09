@@ -1,6 +1,7 @@
 package crawler
 
 import (
+	"reflect"
 	"strings"
 	"testing"
 )
@@ -9,7 +10,10 @@ func TestReadConfig(t *testing.T) {
 	jsonConfig := `
 {
   "Default": {
-    "TLS": true
+    "TLS": true,
+    "Ignore": [
+      "foo"
+    ]
   },
   "Sites": [
     {
@@ -17,7 +21,10 @@ func TestReadConfig(t *testing.T) {
     },
     {
       "Name": "bar",
-      "TLS": false
+      "TLS": false,
+      "Ignore": [
+        "bar"
+      ]
     }
   ]
 }
@@ -27,16 +34,20 @@ func TestReadConfig(t *testing.T) {
 		t.Fatal(err)
 	}
 	var tests = []struct {
-		i   int
-		out bool
+		i      int
+		tls    bool
+		ignore []string
 	}{
-		{0, true},
-		{1, false},
+		{0, true, []string{"foo"}},
+		{1, false, []string{"bar"}},
 	}
 	for _, tt := range tests {
 		site := cfg.Sites[tt.i]
-		if got := site.TLS; got != tt.out {
-			t.Errorf("got TLS=%t, want TLS=%t for Name=%s", got, tt.out, site.Name)
+		if got := site.TLS; got != tt.tls {
+			t.Errorf("got TLS=%t, want TLS=%t for Name=%s", got, tt.tls, site.Name)
+		}
+		if got := site.Ignore; !reflect.DeepEqual(got, tt.ignore) {
+			t.Errorf("got Ignore=%s, want Ignore=%s for Name=%s", got, tt.ignore, site.Name)
 		}
 	}
 }
