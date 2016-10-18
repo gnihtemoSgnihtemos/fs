@@ -17,7 +17,7 @@ type Search struct {
 	Site   string   `short:"s" long:"site" description:"Search a specific site" value-name:"NAME"`
 	Limit  int      `short:"c" long:"max-count" description:"Maximum number of results to show"`
 	Format string   `short:"F" long:"format" description:"Format to use when printing results" choice:"table" choice:"simple" choice:"path" default:"table"`
-	Order  []string `short:"o" long:"order" description:"Result order" value-name:"ORDER" default:"site:asc" default:"dir.path:asc"`
+	Order  []string `short:"o" long:"order" description:"Columns to sort results by" value-name:"COLUMN" default:"site:asc" default:"dir.path:asc"`
 }
 
 func writeTable(w io.Writer, dirs []database.Dir) error {
@@ -54,15 +54,7 @@ func (c *Search) Execute(args []string) error {
 	if err != nil {
 		return err
 	}
-	var orderByClauses []string
-	for _, s := range c.Order {
-		c, err := database.OrderByClause(s)
-		if err != nil {
-			return err
-		}
-		orderByClauses = append(orderByClauses, c)
-	}
-	order := strings.Join(orderByClauses, ", ")
+	order, err := database.OrderByClauses(c.Order)
 	if err != nil {
 		return err
 	}

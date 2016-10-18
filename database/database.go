@@ -180,6 +180,18 @@ func OrderByClause(s string) (string, error) {
 	return field + " " + orderUpper, nil
 }
 
+func OrderByClauses(ss []string) (string, error) {
+	var orderByClauses []string
+	for _, s := range ss {
+		c, err := OrderByClause(s)
+		if err != nil {
+			return "", err
+		}
+		orderByClauses = append(orderByClauses, c)
+	}
+	return strings.Join(orderByClauses, ", "), nil
+}
+
 func selectDirsQuery(keywords, site, order string, limit int) (string, []interface{}) {
 	query := `SELECT site.name AS site, dir_fts.path, dir.modified FROM dir_fts
 INNER JOIN dir ON dir_fts.id = dir.id

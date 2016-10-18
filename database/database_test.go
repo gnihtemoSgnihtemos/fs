@@ -171,3 +171,15 @@ func TestOrderByClause(t *testing.T) {
 		}
 	}
 }
+
+func TestOrderByClauses(t *testing.T) {
+	in := []string{"foo", "bar:desc"}
+	got, err := OrderByClauses(in)
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := "foo, bar DESC"
+	if got != want {
+		t.Errorf("orderByClauses(%q) => %q, want %q", in, got, want)
+	}
+}
