@@ -16,7 +16,7 @@ type Search struct {
 	opts
 	Site   string   `short:"s" long:"site" description:"Search a specific site" value-name:"NAME"`
 	Limit  int      `short:"c" long:"max-count" description:"Maximum number of results to show"`
-	Format string   `short:"F" long:"format" description:"Format to use when printing results" choice:"table" choice:"simple" choice:"path" default:"table"`
+	Format string   `short:"F" long:"format" description:"Format to use when printing results. (default: table, when piping: path)" choice:"table" choice:"simple" choice:"path"`
 	Order  []string `short:"o" long:"order" description:"Columns to sort results by" value-name:"COLUMN" default:"site:asc" default:"dir.path:asc"`
 }
 
@@ -48,6 +48,26 @@ func writePath(w io.Writer, dirs []database.Dir) error {
 	return nil
 }
 
+func writeResults(f *os.File, format string, dirs []database.Dir) error {
+	if format == "" {
+		stat, err := f.Stat()
+		if err != nil {
+			return err
+		}
+		// Default to path format if ouput is being piped
+		if stat.Mode()&os.ModeCharDevice == 0 {
+			format = "path"
+		}
+	}
+	switch format {
+	case "simple":
+		return writeSimple(f, dirs)
+	case "path":
+		return writePath(f, dirs)
+	}
+	return writeTable(f, dirs)
+}
+
 func (c *Search) Execute(args []string) error {
 	cfg := mustReadConfig(c.Config)
 	db, err := database.New(cfg.Database)
@@ -66,11 +86,5 @@ func (c *Search) Execute(args []string) error {
 	if len(dirs) == 0 {
 		return fmt.Errorf("no results found")
 	}
-	switch c.Format {
-	case "simple":
-		return writeSimple(os.Stdout, dirs)
-	case "path":
-		return writePath(os.Stdout, dirs)
-	}
-	return writeTable(os.Stdout, dirs)
+	return writeResults(os.Stdout, c.Format, dirs)
 }
