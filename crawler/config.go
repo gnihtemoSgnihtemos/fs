@@ -24,8 +24,10 @@ type Site struct {
 	Root           string
 	TLS            bool
 	Skip           bool
-	ConnectTimeout time.Duration
-	ReadTimeout    time.Duration
+	ConnectTimeout string
+	connectTimeout time.Duration
+	ReadTimeout    string
+	readTimeout    time.Duration
 	Ignore         []string
 	IgnoreSymlinks bool
 }
@@ -50,15 +52,34 @@ func readConfig(r io.Reader) (Config, error) {
 	if err := json.Unmarshal(data, &cfg); err != nil {
 		return Config{}, err
 	}
+	if err := cfg.validate(); err != nil {
+		return Config{}, err
+	}
 	return cfg, nil
 }
 
-func (c *Config) Validate() error {
+func (c *Config) validate() error {
 	if c.Concurrency < 1 {
 		return fmt.Errorf("concurrency must be >= 1")
 	}
 	if len(c.Database) == 0 {
 		return fmt.Errorf("path to database must be set")
+	}
+	for i, site := range c.Sites {
+		{
+			d, err := time.ParseDuration(site.ConnectTimeout)
+			if err != nil {
+				return err
+			}
+			c.Sites[i].connectTimeout = d
+		}
+		{
+			d, err := time.ParseDuration(site.ReadTimeout)
+			if err != nil {
+				return err
+			}
+			c.Sites[i].readTimeout = d
+		}
 	}
 	return nil
 }
@@ -73,12 +94,5 @@ func ReadConfig(name string) (Config, error) {
 		return Config{}, err
 	}
 	defer f.Close()
-	cfg, err := readConfig(f)
-	if err != nil {
-		return Config{}, err
-	}
-	if err := cfg.Validate(); err != nil {
-		return Config{}, err
-	}
-	return cfg, nil
+	return readConfig(f)
 }

@@ -6,7 +6,6 @@ import (
 	"log"
 	"path/filepath"
 	"strings"
-	"time"
 
 	"github.com/martinp/fs/database"
 	"github.com/martinp/fs/ftp"
@@ -33,11 +32,11 @@ func New(site Site, dbClient *database.Client, logger *log.Logger) *Crawler {
 }
 
 func (c *Crawler) Connect() error {
-	ftpClient, err := ftp.DialTimeout("tcp", c.site.Address, time.Second*c.site.ConnectTimeout)
+	ftpClient, err := ftp.DialTimeout("tcp", c.site.Address, c.site.connectTimeout)
 	if err != nil {
 		return err
 	}
-	ftpClient.ReadTimeout = time.Second * c.site.ReadTimeout
+	ftpClient.ReadTimeout = c.site.readTimeout
 	if c.site.TLS {
 		if err := ftpClient.LoginWithTLS(&tls.Config{InsecureSkipVerify: true}, c.site.Username, c.site.Password); err != nil {
 			return err
