@@ -25,6 +25,7 @@ type Site struct {
 	TLS            bool
 	Skip           bool
 	ConnectTimeout time.Duration
+	ReadTimeout    time.Duration
 	Ignore         []string
 	IgnoreSymlinks bool
 }

@@ -7,19 +7,31 @@ import (
 	"time"
 )
 
-type Client struct {
-	conn net.Conn
-	text *textproto.Conn
+type clock interface {
+	Now() time.Time
 }
 
-func newClient(conn net.Conn) (*Client, error) {
-	client := &Client{
-		conn: conn,
-		text: textproto.NewConn(conn),
+type realClock struct{}
+
+func (r realClock) Now() time.Time { return time.Now() }
+
+type Client struct {
+	conn        net.Conn
+	text        *textproto.Conn
+	clock       clock
+	ReadTimeout time.Duration
+}
+
+func newClient(conn net.Conn, timeout time.Duration) (*Client, error) {
+	c := &Client{
+		conn:  conn,
+		text:  textproto.NewConn(conn),
+		clock: realClock{},
 	}
-	// Read multiline 2xx responses sent by server before login
-	_, _, err := client.text.ReadResponse(2)
-	return client, err
+	// Read multiline 220 responses sent by server before login
+	c.setReadTimeout(timeout)
+	_, _, err := c.text.ReadResponse(220)
+	return c, err
 }
 
 func Dial(network, addr string) (*Client, error) {
@@ -27,7 +39,7 @@ func Dial(network, addr string) (*Client, error) {
 	if err != nil {
 		return nil, err
 	}
-	return newClient(conn)
+	return newClient(conn, 0)
 }
 
 func DialTimeout(network, addr string, timeout time.Duration) (*Client, error) {
@@ -35,7 +47,15 @@ func DialTimeout(network, addr string, timeout time.Duration) (*Client, error) {
 	if err != nil {
 		return nil, err
 	}
-	return newClient(conn)
+	return newClient(conn, timeout)
+}
+
+func (c *Client) setReadTimeout(timeout time.Duration) {
+	if timeout == 0 {
+		return
+	}
+	deadline := c.clock.Now().Add(timeout)
+	c.conn.SetReadDeadline(deadline)
 }
 
 func (c *Client) Close() error {
@@ -43,6 +63,7 @@ func (c *Client) Close() error {
 }
 
 func (c *Client) Cmd(expectCode int, format string, args ...interface{}) (int, string, error) {
+	c.setReadTimeout(c.ReadTimeout)
 	if err := c.text.PrintfLine(format, args...); err != nil {
 		return 0, "", err
 	}

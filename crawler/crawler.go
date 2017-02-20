@@ -37,6 +37,7 @@ func (c *Crawler) Connect() error {
 	if err != nil {
 		return err
 	}
+	ftpClient.ReadTimeout = time.Second * c.site.ReadTimeout
 	if c.site.TLS {
 		if err := ftpClient.LoginWithTLS(&tls.Config{InsecureSkipVerify: true}, c.site.Username, c.site.Password); err != nil {
 			return err
