@@ -72,7 +72,7 @@ func TestParseFile(t *testing.T) {
 				User: "bax", Group: "baz",
 				NumEntries: 3,
 				Size:       131072,
-				Modified:   time.Date(2016, 1, 19, 23, 14, 0, 0, time.UTC),
+				Modified:   time.Date(time.Now().Year(), 1, 19, 23, 14, 0, 0, time.UTC),
 				Mode:       os.FileMode(os.ModeDir + 0777),
 			},
 		},
