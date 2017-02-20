@@ -28,7 +28,8 @@ Available commands:
   "Database": "/path/to/fs.db",
   "Concurrency": 5,
   "Default": {
-    "ConnectTimeout": 5,
+    "ConnectTimeout": "5s",
+    "ReadTimeout": "1m",
     "Root": "/",
     "TLS": false,
     "Ignore": [],
