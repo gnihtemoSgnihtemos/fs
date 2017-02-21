@@ -22,11 +22,11 @@ type Client struct {
 	ReadTimeout time.Duration
 }
 
-func newClient(conn net.Conn, timeout time.Duration) (*Client, error) {
+func newClient(conn net.Conn, timeout time.Duration, clock clock) (*Client, error) {
 	c := &Client{
 		conn:  conn,
 		text:  textproto.NewConn(conn),
-		clock: realClock{},
+		clock: clock,
 	}
 	// Read multiline 220 responses sent by server before login
 	c.setReadTimeout(timeout)
@@ -34,12 +34,16 @@ func newClient(conn net.Conn, timeout time.Duration) (*Client, error) {
 	return c, err
 }
 
+func NewClient(conn net.Conn, timeout time.Duration) (*Client, error) {
+	return newClient(conn, timeout, realClock{})
+}
+
 func Dial(network, addr string) (*Client, error) {
 	conn, err := net.Dial(network, addr)
 	if err != nil {
 		return nil, err
 	}
-	return newClient(conn, 0)
+	return NewClient(conn, 0)
 }
 
 func DialTimeout(network, addr string, timeout time.Duration) (*Client, error) {
@@ -47,7 +51,7 @@ func DialTimeout(network, addr string, timeout time.Duration) (*Client, error) {
 	if err != nil {
 		return nil, err
 	}
-	return newClient(conn, timeout)
+	return NewClient(conn, timeout)
 }
 
 func (c *Client) setReadTimeout(timeout time.Duration) {
