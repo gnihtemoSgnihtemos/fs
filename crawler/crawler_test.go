@@ -10,14 +10,13 @@ import (
 	"github.com/martinp/fs/ftp"
 )
 
-type testLister struct {
-}
+type fakeLister struct{}
 
-func (l *testLister) FilterFiles(files []ftp.File) []ftp.File {
+func (l *fakeLister) filterFiles(files []ftp.File) []ftp.File {
 	return filterFiles(files, []string{"_baz", "_foo"}, true)
 }
 
-func (l *testLister) List(path string) ([]ftp.File, error) {
+func (l *fakeLister) list(path string) ([]ftp.File, error) {
 	if path == "/foo/bar/bar1" {
 		return []ftp.File{
 			{Name: ".", Mode: os.ModeDir},
@@ -89,7 +88,7 @@ func TestWalk(t *testing.T) {
 		{Name: "baz1", Mode: os.ModeDir},
 		{Name: "baz2", Mode: os.ModeDir},
 	}
-	got, err := walkShallow(&testLister{}, "/", -1)
+	got, err := walkShallow(&fakeLister{}, "/", -1)
 	if err != nil {
 		t.Fatal(err)
 	}
