@@ -1,6 +1,6 @@
 # fs
 
-[![Build Status](https://travis-ci.org/martinp/fs.svg)](https://travis-ci.org/martinp/fs)
+[![Build Status](https://travis-ci.org/mpolden/fs.svg)](https://travis-ci.org/mpolden/fs)
 
 Crawl and search FTP servers.
 
