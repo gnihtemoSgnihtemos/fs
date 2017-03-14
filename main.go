@@ -5,7 +5,7 @@ import (
 	"os"
 
 	"github.com/jessevdk/go-flags"
-	"github.com/martinp/fs/cmd"
+	"github.com/mpolden/fs/cmd"
 )
 
 func main() {

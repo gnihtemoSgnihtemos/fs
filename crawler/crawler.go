@@ -7,8 +7,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/martinp/fs/database"
-	"github.com/martinp/fs/ftp"
+	"github.com/mpolden/fs/database"
+	"github.com/mpolden/fs/ftp"
 )
 
 type dirLister interface {

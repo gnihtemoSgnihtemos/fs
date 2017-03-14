@@ -6,7 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/martinp/fs/crawler"
+	"github.com/mpolden/fs/crawler"
 )
 
 var errUnexpectedArgs = errors.New("command does not accept any arguments")

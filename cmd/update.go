@@ -4,8 +4,8 @@ import (
 	"log"
 	"os"
 
-	"github.com/martinp/fs/crawler"
-	"github.com/martinp/fs/database"
+	"github.com/mpolden/fs/crawler"
+	"github.com/mpolden/fs/database"
 )
 
 type Update struct {

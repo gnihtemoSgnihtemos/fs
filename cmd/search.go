@@ -8,7 +8,7 @@ import (
 	"text/tabwriter"
 	"time"
 
-	"github.com/martinp/fs/database"
+	"github.com/mpolden/fs/database"
 	"github.com/olekukonko/tablewriter"
 )
 

@@ -3,7 +3,7 @@ package cmd
 import (
 	"log"
 
-	"github.com/martinp/fs/database"
+	"github.com/mpolden/fs/database"
 )
 
 type GC struct {
