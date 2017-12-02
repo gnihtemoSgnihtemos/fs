@@ -18,6 +18,12 @@ type realClock struct{}
 
 func (r realClock) Now() time.Time { return time.Now() }
 
+type dialerWithTimeout struct{ timeout time.Duration }
+
+func (d dialerWithTimeout) Dial(network, addr string) (net.Conn, error) {
+	return net.DialTimeout(network, addr, d.timeout)
+}
+
 type Client struct {
 	conn        net.Conn
 	text        *textproto.Conn
@@ -50,7 +56,7 @@ func Dial(network, addr string) (*Client, error) {
 }
 
 func DialWithProxy(network, addr string, proxyURL *url.URL, timeout time.Duration) (*Client, error) {
-	p, err := proxy.FromURL(proxyURL, proxy.Direct)
+	p, err := proxy.FromURL(proxyURL, dialerWithTimeout{timeout})
 	if err != nil {
 		return nil, err
 	}
