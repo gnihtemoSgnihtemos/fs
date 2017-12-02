@@ -4,7 +4,10 @@ import (
 	"crypto/tls"
 	"net"
 	"net/textproto"
+	"net/url"
 	"time"
+
+	"golang.org/x/net/proxy"
 )
 
 type clock interface {
@@ -44,6 +47,18 @@ func Dial(network, addr string) (*Client, error) {
 		return nil, err
 	}
 	return NewClient(conn, 0)
+}
+
+func DialWithProxy(network, addr string, proxyURL *url.URL, timeout time.Duration) (*Client, error) {
+	p, err := proxy.FromURL(proxyURL, proxy.Direct)
+	if err != nil {
+		return nil, err
+	}
+	conn, err := p.Dial(network, addr)
+	if err != nil {
+		return nil, err
+	}
+	return NewClient(conn, timeout)
 }
 
 func DialTimeout(network, addr string, timeout time.Duration) (*Client, error) {

@@ -32,7 +32,13 @@ func New(site Site, dbClient *database.Client, logger *log.Logger) *Crawler {
 }
 
 func (c *Crawler) Connect() error {
-	ftpClient, err := ftp.DialTimeout("tcp", c.site.Address, c.site.connectTimeout)
+	var ftpClient *ftp.Client
+	var err error
+	if c.site.proxyURL != nil {
+		ftpClient, err = ftp.DialWithProxy("tcp", c.site.Address, c.site.proxyURL, c.site.connectTimeout)
+	} else {
+		ftpClient, err = ftp.DialTimeout("tcp", c.site.Address, c.site.connectTimeout)
+	}
 	if err != nil {
 		return err
 	}

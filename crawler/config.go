@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"net/url"
 	"os"
 	"time"
 )
@@ -23,6 +24,8 @@ type Site struct {
 	Password       string
 	Root           string
 	TLS            bool
+	ProxyURL       string
+	proxyURL       *url.URL
 	Skip           bool
 	ConnectTimeout string
 	connectTimeout time.Duration
@@ -79,6 +82,13 @@ func (c *Config) validate() error {
 				return err
 			}
 			c.Sites[i].readTimeout = d
+		}
+		if site.ProxyURL != "" {
+			proxyURL, err := url.Parse(site.ProxyURL)
+			if err != nil {
+				return err
+			}
+			c.Sites[i].proxyURL = proxyURL
 		}
 	}
 	return nil
