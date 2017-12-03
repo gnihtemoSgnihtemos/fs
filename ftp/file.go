@@ -12,7 +12,7 @@ import (
 	"time"
 )
 
-var fieldSplitter = regexp.MustCompile("\\s+")
+var fieldSplitter = regexp.MustCompile(`\s+`)
 
 type File struct {
 	Path       string

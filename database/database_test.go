@@ -26,6 +26,9 @@ func TestGetOrInsertSite(t *testing.T) {
 		t.Errorf("Expected Name=%q, got Name=%q", want, s1.Name)
 	}
 	s2, err := c.getOrInsertSite("foo")
+	if err != nil {
+		t.Fatal(err)
+	}
 	if s2.ID != s1.ID {
 		t.Errorf("s1.ID(%d) != s2.ID(%d)", s1.ID, s2.ID)
 	}
