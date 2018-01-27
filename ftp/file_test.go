@@ -35,13 +35,16 @@ func TestParseTime(t *testing.T) {
 		month      string
 		yearOrTime string
 		out        time.Time
+		now        time.Time
 	}{
-		{15, "Jan", "2014", time.Date(2014, 1, 15, 0, 0, 0, 0, time.UTC)},
-		{7, "Oct", "23:14", time.Date(time.Now().Year(), 10, 7, 23, 14, 0, 0, time.UTC)},
-		{21, "Jul", "05:32", time.Date(time.Now().Year(), 7, 21, 5, 32, 0, 0, time.UTC)},
+		{15, "Jan", "2014", time.Date(2014, 1, 15, 0, 0, 0, 0, time.UTC), time.Now()},
+		{7, "Oct", "23:14", time.Date(2016, 10, 7, 23, 14, 0, 0, time.UTC), time.Date(2016, 11, 1, 0, 0, 0, 0, time.UTC)},
+		{21, "Jul", "05:32", time.Date(2016, 7, 21, 5, 32, 0, 0, time.UTC), time.Date(2016, 11, 1, 0, 0, 0, 0, time.UTC)},
+		{10, "Dec", "09:24", time.Date(2017, 12, 10, 9, 24, 0, 0, time.UTC), time.Date(2018, 1, 1, 0, 0, 0, 0, time.UTC)},
+		{10, "Jan", "09:24", time.Date(2018, 1, 10, 9, 24, 0, 0, time.UTC), time.Date(2018, 1, 1, 0, 0, 0, 0, time.UTC)},
 	}
 	for _, tt := range tests {
-		rv, err := parseTime(tt.yearOrTime, tt.month, tt.day)
+		rv, err := parseTime(tt.now, tt.yearOrTime, tt.month, tt.day)
 		if err != nil {
 			t.Fatal(err)
 		}

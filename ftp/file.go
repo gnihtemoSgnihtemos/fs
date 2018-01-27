@@ -43,12 +43,12 @@ func parseFileMode(s string) (os.FileMode, error) {
 	return mode, nil
 }
 
-func parseTime(yearOrTime, month string, day int) (time.Time, error) {
+func parseTime(now time.Time, yearOrTime, month string, day int) (time.Time, error) {
 	m, err := time.Parse("Jan", month)
 	if err != nil {
 		return time.Time{}, err
 	}
-	year := time.Now().Year()
+	var year int
 	hour := 0
 	min := 0
 	if strings.Contains(yearOrTime, ":") {
@@ -66,6 +66,12 @@ func parseTime(yearOrTime, month string, day int) (time.Time, error) {
 			return time.Time{}, err
 		}
 		min = _min
+		// Time is <= 6 months ago. Consider month to avoid returning a future time
+		if m.Month() > now.Month() {
+			year = now.AddDate(-1, 0, 0).Year()
+		} else {
+			year = now.Year()
+		}
 	} else {
 		_year, err := strconv.Atoi(yearOrTime)
 		if err != nil {
@@ -108,7 +114,7 @@ func ParseFile(s string) (File, error) {
 	if err != nil {
 		return File{}, err
 	}
-	modified, err := parseTime(parts[7], parts[5], day)
+	modified, err := parseTime(time.Now(), parts[7], parts[5], day)
 	if err != nil {
 		return File{}, err
 	}
