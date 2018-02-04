@@ -8,7 +8,15 @@ import (
 	"time"
 )
 
-func TestParseFileMode(t *testing.T) {
+func date(year int, month time.Month, day int) time.Time {
+	return dt(year, month, day, 0, 0, 0)
+}
+
+func dt(year int, month time.Month, day, hour, minute, second int) time.Time {
+	return time.Date(year, month, day, hour, minute, second, 0, time.UTC)
+}
+
+func TestParseMode(t *testing.T) {
 	var tests = []struct {
 		in string
 	}{
@@ -19,12 +27,12 @@ func TestParseFileMode(t *testing.T) {
 		{"-r-xr-xr-x"},
 	}
 	for _, tt := range tests {
-		out, err := parseFileMode(tt.in)
+		out, err := parseMode(tt.in)
 		if err != nil {
 			t.Fatal(err)
 		}
 		if s := strings.ToLower(out.String()); s != tt.in {
-			t.Errorf("ParseFileMode(%q) => %q, want %q", tt.in, s, tt.in)
+			t.Errorf("ParseMode(%q) => %q, want %q", tt.in, s, tt.in)
 		}
 	}
 }
@@ -37,11 +45,11 @@ func TestParseTime(t *testing.T) {
 		out        time.Time
 		now        time.Time
 	}{
-		{15, "Jan", "2014", time.Date(2014, 1, 15, 0, 0, 0, 0, time.UTC), time.Now()},
-		{7, "Oct", "23:14", time.Date(2016, 10, 7, 23, 14, 0, 0, time.UTC), time.Date(2016, 11, 1, 0, 0, 0, 0, time.UTC)},
-		{21, "Jul", "05:32", time.Date(2016, 7, 21, 5, 32, 0, 0, time.UTC), time.Date(2016, 11, 1, 0, 0, 0, 0, time.UTC)},
-		{10, "Dec", "09:24", time.Date(2017, 12, 10, 9, 24, 0, 0, time.UTC), time.Date(2018, 1, 1, 0, 0, 0, 0, time.UTC)},
-		{10, "Jan", "09:24", time.Date(2018, 1, 10, 9, 24, 0, 0, time.UTC), time.Date(2018, 1, 1, 0, 0, 0, 0, time.UTC)},
+		{15, "Jan", "2014", date(2014, 1, 15), time.Now()},
+		{7, "Oct", "23:14", dt(2016, 10, 7, 23, 14, 0), date(2016, 11, 1)},
+		{21, "Jul", "05:32", dt(2016, 7, 21, 5, 32, 0), date(2016, 11, 1)},
+		{10, "Dec", "09:24", dt(2017, 12, 10, 9, 24, 0), date(2018, 1, 1)},
+		{10, "Jan", "09:24", dt(2018, 1, 10, 9, 24, 0), date(2018, 1, 1)},
 	}
 	for _, tt := range tests {
 		rv, err := parseTime(tt.now, tt.yearOrTime, tt.month, tt.day)
@@ -65,7 +73,7 @@ func TestParseFile(t *testing.T) {
 				User: "foo", Group: "bar",
 				NumEntries: 3,
 				Size:       4096,
-				Modified:   time.Date(2014, 7, 25, 0, 0, 0, 0, time.UTC),
+				Modified:   date(2014, 7, 25),
 				Mode:       os.FileMode(os.ModeDir + 0777),
 			},
 		},
@@ -75,7 +83,7 @@ func TestParseFile(t *testing.T) {
 				User: "bax", Group: "baz",
 				NumEntries: 3,
 				Size:       131072,
-				Modified:   time.Date(time.Now().Year(), 1, 19, 23, 14, 0, 0, time.UTC),
+				Modified:   dt(time.Now().Year(), 1, 19, 23, 14, 0),
 				Mode:       os.FileMode(os.ModeDir + 0777),
 			},
 		},
