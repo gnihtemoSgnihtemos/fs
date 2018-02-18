@@ -43,7 +43,7 @@ func writeSimple(w io.Writer, dirs []database.Dir) error {
 
 func writePath(w io.Writer, dirs []database.Dir) error {
 	for _, d := range dirs {
-		fmt.Fprintln(w, d.Path)
+		fmt.Fprintf(w, "%s %s\n", d.Site, d.Path)
 	}
 	return nil
 }
