@@ -3,7 +3,6 @@ package crawler
 import (
 	"fmt"
 	"os"
-	"reflect"
 	"testing"
 
 	"github.com/mpolden/fs/database"
@@ -13,46 +12,43 @@ import (
 type fakeLister struct{}
 
 func (l *fakeLister) filterFiles(files []ftp.File) []ftp.File {
-	return filterFiles(files, []string{"_baz", "_foo"}, true)
+	return filterFiles(files, []string{"_foo", "_bar"}, true)
 }
 
 func (l *fakeLister) list(path string) ([]ftp.File, error) {
-	if path == "/foo/bar/bar1" {
+	switch path {
+	case "/dir1/dir1-1/dir1-1-1":
 		return []ftp.File{
-			{Name: "bar1-regular"},
-			{Name: "bar1-dir", Mode: os.ModeDir},
+			{Name: "file1-1-1-1"}, // Regular
+			{Name: "dir1-1-1-1", Mode: os.ModeDir},
 		}, nil
-	}
-	if path == "/foo/baz/baz1" {
+	case "/dir1/dir1-2/dir1-2-1":
 		return []ftp.File{
-			{Name: "baz1-regular"},
-			{Name: "baz1-dir", Mode: os.ModeDir},
+			{Name: "file1-2-1-1"},
+			{Name: "dir1-2-1-1", Mode: os.ModeDir},
 		}, nil
-	}
-	if path == "/foo/bar" {
+	case "/dir1/dir1-2":
 		return []ftp.File{
-			{Name: "bar1", Mode: os.ModeDir},
-			{Name: "bar2", Mode: os.ModeDir},
+			{Name: "dir1-2-1", Mode: os.ModeDir},
+			{Name: "dir1-2-2", Mode: os.ModeDir},
+			// Ignored:
 			{Name: "_foo", Mode: os.ModeDir},
-			{Name: "_baz", Mode: os.ModeDir},
-			{Name: "_bax", Mode: os.ModeSymlink},
+			{Name: "_bar", Mode: os.ModeDir},
+			{Name: "symlink1-2-1", Mode: os.ModeSymlink},
 		}, nil
-	}
-	if path == "/foo/baz" {
+	case "/dir1/dir1-1":
 		return []ftp.File{
-			{Name: "baz1", Mode: os.ModeDir},
-			{Name: "baz2", Mode: os.ModeDir},
+			{Name: "dir1-1-1", Mode: os.ModeDir},
+			{Name: "dir1-1-2", Mode: os.ModeDir},
 		}, nil
-	}
-	if path == "/foo" {
+	case "/dir1":
 		return []ftp.File{
-			{Name: "bar", Mode: os.ModeDir},
-			{Name: "baz", Mode: os.ModeDir},
+			{Name: "dir1-1", Mode: os.ModeDir},
+			{Name: "dir1-2", Mode: os.ModeDir},
 		}, nil
-	}
-	if path == "/" {
+	case "/":
 		return []ftp.File{
-			{Name: "foo", Mode: os.ModeDir},
+			{Name: "dir1", Mode: os.ModeDir},
 		}, nil
 	}
 	return nil, fmt.Errorf("unknown path: %s", path)
@@ -60,20 +56,28 @@ func (l *fakeLister) list(path string) ([]ftp.File, error) {
 
 func TestWalk(t *testing.T) {
 	want := []ftp.File{
-		{Name: "foo", Mode: os.ModeDir},
-		{Name: "bar", Mode: os.ModeDir},
-		{Name: "baz", Mode: os.ModeDir},
-		{Name: "bar1", Mode: os.ModeDir},
-		{Name: "bar2", Mode: os.ModeDir},
-		{Name: "baz1", Mode: os.ModeDir},
-		{Name: "baz2", Mode: os.ModeDir},
+		{Name: "dir1", Mode: os.ModeDir},
+		{Name: "dir1-1", Mode: os.ModeDir},
+		{Name: "dir1-2", Mode: os.ModeDir},
+		{Name: "dir1-1-1", Mode: os.ModeDir},
+		{Name: "dir1-1-2", Mode: os.ModeDir},
+		{Name: "dir1-2-1", Mode: os.ModeDir},
+		{Name: "dir1-2-2", Mode: os.ModeDir},
 	}
 	got, err := walkShallow(&fakeLister{}, "/", -1)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !reflect.DeepEqual(got, want) {
-		t.Errorf("WalkDirs(%q) => %+v, want %+v", "/", got, want)
+	if len(want) != len(got) {
+		t.Fatal("Expected equal length")
+	}
+	for i := range want {
+		if want[i].Name != got[i].Name {
+			t.Errorf("want Name=%s, got Name=%s", want[i].Name, got[i].Name)
+		}
+		if want[i].Mode != got[i].Mode {
+			t.Errorf("want Mode=%d, got Mode=%d", want[i].Mode, got[i].Mode)
+		}
 	}
 }
 
