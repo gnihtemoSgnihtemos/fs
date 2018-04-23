@@ -148,14 +148,13 @@ func ParseFiles(path string, r io.Reader) ([]File, error) {
 		if err != nil {
 			return nil, err
 		}
+		if f.Name == "." || f.Name == ".." {
+			continue
+		}
 		f.Path = filepath.Join(path, f.Name)
 		files = append(files, f)
 	}
 	return files, scanner.Err()
-}
-
-func (f *File) IsCurrentOrParent() bool {
-	return f.Name == "." || f.Name == ".."
 }
 
 func (f *File) IsSymlink() bool {

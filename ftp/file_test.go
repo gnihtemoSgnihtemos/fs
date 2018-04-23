@@ -112,8 +112,8 @@ drwxrwxrwx  72 foo   bar      94208 May 15 01:03 dir3
 	if err != nil {
 		t.Fatal(err)
 	}
-	if got := len(files); got != 5 {
-		t.Errorf("got %d, want %d", got, 5)
+	if want, got := 3, len(files); got != want {
+		t.Errorf("got %d, want %d", got, want)
 	}
 }
 
@@ -125,23 +125,6 @@ func TestParseFilesSkipsLinesWithReturnCodes(t *testing.T) {
 	}
 	if got := len(files); got != 0 {
 		t.Errorf("got %d, want %d", got, 0)
-	}
-}
-
-func TestIsCurrentOrParent(t *testing.T) {
-	var tests = []struct {
-		in  string
-		out bool
-	}{
-		{".", true},
-		{"..", true},
-		{"foo", false},
-	}
-	for _, tt := range tests {
-		got := (&File{Name: tt.in}).IsCurrentOrParent()
-		if got != tt.out {
-			t.Errorf("File{Name: %q}.IsCurrentOrParent() => %t, want %t", tt.in, got, tt.out)
-		}
 	}
 }
 

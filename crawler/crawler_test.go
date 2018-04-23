@@ -19,24 +19,18 @@ func (l *fakeLister) filterFiles(files []ftp.File) []ftp.File {
 func (l *fakeLister) list(path string) ([]ftp.File, error) {
 	if path == "/foo/bar/bar1" {
 		return []ftp.File{
-			{Name: ".", Mode: os.ModeDir},
-			{Name: "..", Mode: os.ModeDir},
 			{Name: "bar1-regular"},
 			{Name: "bar1-dir", Mode: os.ModeDir},
 		}, nil
 	}
 	if path == "/foo/baz/baz1" {
 		return []ftp.File{
-			{Name: ".", Mode: os.ModeDir},
-			{Name: "..", Mode: os.ModeDir},
 			{Name: "baz1-regular"},
 			{Name: "baz1-dir", Mode: os.ModeDir},
 		}, nil
 	}
 	if path == "/foo/bar" {
 		return []ftp.File{
-			{Name: ".", Mode: os.ModeDir},
-			{Name: "..", Mode: os.ModeDir},
 			{Name: "bar1", Mode: os.ModeDir},
 			{Name: "bar2", Mode: os.ModeDir},
 			{Name: "_foo", Mode: os.ModeDir},
@@ -46,24 +40,18 @@ func (l *fakeLister) list(path string) ([]ftp.File, error) {
 	}
 	if path == "/foo/baz" {
 		return []ftp.File{
-			{Name: ".", Mode: os.ModeDir},
-			{Name: "..", Mode: os.ModeDir},
 			{Name: "baz1", Mode: os.ModeDir},
 			{Name: "baz2", Mode: os.ModeDir},
 		}, nil
 	}
 	if path == "/foo" {
 		return []ftp.File{
-			{Name: ".", Mode: os.ModeDir},
-			{Name: "..", Mode: os.ModeDir},
 			{Name: "bar", Mode: os.ModeDir},
 			{Name: "baz", Mode: os.ModeDir},
 		}, nil
 	}
 	if path == "/" {
 		return []ftp.File{
-			{Name: ".", Mode: os.ModeDir},
-			{Name: "..", Mode: os.ModeDir},
 			{Name: "foo", Mode: os.ModeDir},
 		}, nil
 	}
@@ -72,19 +60,11 @@ func (l *fakeLister) list(path string) ([]ftp.File, error) {
 
 func TestWalk(t *testing.T) {
 	want := []ftp.File{
-		{Name: ".", Mode: os.ModeDir},
-		{Name: "..", Mode: os.ModeDir},
 		{Name: "foo", Mode: os.ModeDir},
-		{Name: ".", Mode: os.ModeDir},
-		{Name: "..", Mode: os.ModeDir},
 		{Name: "bar", Mode: os.ModeDir},
 		{Name: "baz", Mode: os.ModeDir},
-		{Name: ".", Mode: os.ModeDir},
-		{Name: "..", Mode: os.ModeDir},
 		{Name: "bar1", Mode: os.ModeDir},
 		{Name: "bar2", Mode: os.ModeDir},
-		{Name: ".", Mode: os.ModeDir},
-		{Name: "..", Mode: os.ModeDir},
 		{Name: "baz1", Mode: os.ModeDir},
 		{Name: "baz2", Mode: os.ModeDir},
 	}
@@ -99,8 +79,6 @@ func TestWalk(t *testing.T) {
 
 func TestMakeDirs(t *testing.T) {
 	files := []ftp.File{
-		{Path: "/foo", Name: "."},
-		{Path: "/foo", Name: ".."},
 		{Path: "/foo", Name: "foo"},
 	}
 	want := database.Dir{Path: "/foo"}
