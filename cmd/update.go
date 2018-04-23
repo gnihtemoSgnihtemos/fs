@@ -22,7 +22,7 @@ func (c *Update) Execute(args []string) error {
 	if err != nil {
 		return err
 	}
-	logger := log.New(os.Stderr, "", log.LstdFlags)
+	logger := log.New(os.Stderr, "fs: ", 0)
 	sem := make(chan bool, cfg.Concurrency)
 	for _, site := range cfg.Sites {
 		if c.Site != "" && c.Site != site.Name {

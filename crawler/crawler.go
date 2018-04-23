@@ -98,7 +98,6 @@ func (c *Crawler) Run() error {
 	if err := c.dbClient.Insert(c.site.Name, dirs); err != nil {
 		return err
 	}
-	c.Logf("Saved %d directories", len(dirs))
 	return nil
 }
 
