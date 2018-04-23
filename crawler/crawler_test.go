@@ -17,6 +17,23 @@ func (l *fakeLister) filterFiles(files []ftp.File) []ftp.File {
 
 func (l *fakeLister) list(path string) ([]ftp.File, error) {
 	switch path {
+	case "/dir2/_dir2-2/dir2-2-1":
+		return []ftp.File{
+			{Name: "file2-2-1"}, // Regular, decides depth
+		}, nil
+	case "/dir2/Dir2-1":
+		return []ftp.File{
+			{Name: "file2-1-1"}, // Regular, but should not decide max depth
+		}, nil
+	case "/dir2/_dir2-2":
+		return []ftp.File{
+			{Name: "dir2-2-1", Mode: os.ModeDir},
+		}, nil
+	case "/dir2":
+		return []ftp.File{
+			{Name: "Dir2-1", Mode: os.ModeDir}, // Names starting with '_' should sort before uppercase chars
+			{Name: "_dir2-2", Mode: os.ModeDir},
+		}, nil
 	case "/dir1/dir1-1/dir1-1-1":
 		return []ftp.File{
 			{Name: "file1-1-1-1"}, // Regular
@@ -49,6 +66,7 @@ func (l *fakeLister) list(path string) ([]ftp.File, error) {
 	case "/":
 		return []ftp.File{
 			{Name: "dir1", Mode: os.ModeDir},
+			{Name: "dir2", Mode: os.ModeDir},
 		}, nil
 	}
 	return nil, fmt.Errorf("unknown path: %s", path)
@@ -57,12 +75,16 @@ func (l *fakeLister) list(path string) ([]ftp.File, error) {
 func TestWalk(t *testing.T) {
 	want := []ftp.File{
 		{Name: "dir1", Mode: os.ModeDir},
+		{Name: "dir2", Mode: os.ModeDir},
 		{Name: "dir1-1", Mode: os.ModeDir},
 		{Name: "dir1-2", Mode: os.ModeDir},
 		{Name: "dir1-1-1", Mode: os.ModeDir},
 		{Name: "dir1-1-2", Mode: os.ModeDir},
 		{Name: "dir1-2-1", Mode: os.ModeDir},
 		{Name: "dir1-2-2", Mode: os.ModeDir},
+		{Name: "_dir2-2", Mode: os.ModeDir},
+		{Name: "Dir2-1", Mode: os.ModeDir},
+		{Name: "dir2-2-1", Mode: os.ModeDir},
 	}
 	got, err := walkShallow(&fakeLister{}, "/", -1)
 	if err != nil {

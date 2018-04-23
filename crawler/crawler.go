@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	"github.com/mpolden/fs/database"
@@ -137,6 +138,13 @@ func walkShallow(lister dirLister, path string, maxdepth int) ([]ftp.File, error
 		return nil, err
 	}
 	files = lister.filterFiles(files)
+	sort.Slice(files, func(i, j int) bool {
+		// Sort file names starting with underscore first
+		if strings.Index(files[i].Name, "_") == 0 && strings.Index(files[j].Name, "_") != 0 {
+			return true
+		}
+		return files[i].Name < files[j].Name
+	})
 Loop:
 	for _, f := range files {
 		if !f.Mode.IsDir() {
