@@ -86,12 +86,12 @@ func TestWalk(t *testing.T) {
 		{Name: "Dir2-1", Mode: os.ModeDir},
 		{Name: "dir2-2-1", Mode: os.ModeDir},
 	}
-	got, err := walkShallow(&fakeLister{}, "/", -1)
+	got, err := walk(&fakeLister{}, "/", -1)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if len(want) != len(got) {
-		t.Fatal("Expected equal length")
+		t.Fatal("expected equal length")
 	}
 	for i := range want {
 		if want[i].Name != got[i].Name {
@@ -103,16 +103,14 @@ func TestWalk(t *testing.T) {
 	}
 }
 
-func TestMakeDirs(t *testing.T) {
-	files := []ftp.File{
-		{Path: "/foo", Name: "foo"},
-	}
+func TestToDirs(t *testing.T) {
+	files := []ftp.File{{Path: "/foo", Name: "foo"}}
 	want := database.Dir{Path: "/foo"}
-	got := makeDirs(files)
+	got := toDirs(files)
 	if len(got) == 0 {
 		t.Fatal("expected non-zero length")
 	}
 	if got[0].Path != want.Path {
-		t.Errorf("got Path=%q, want Path=%q", got[0].Path, want.Path)
+		t.Errorf("want Path=%s, got Path=%s", want.Path, got[0].Path)
 	}
 }

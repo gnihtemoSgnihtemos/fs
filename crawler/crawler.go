@@ -79,22 +79,21 @@ func (c *Crawler) filterFiles(files []ftp.File) []ftp.File {
 	return filterFiles(files, c.site.Ignore, c.site.IgnoreSymlinks)
 }
 
-func (c *Crawler) walkShallow(path string) ([]ftp.File, error) {
-	return walkShallow(c, path, -1)
+func (c *Crawler) walk(path string) ([]ftp.File, error) {
+	return walk(c, path, -1)
 }
 
 func (c *Crawler) Run() error {
 	c.Logf("Walking %s", c.site.Root)
-	files, err := c.walkShallow(c.site.Root)
+	files, err := c.walk(c.site.Root)
 	if err != nil {
 		return err
 	}
-	c.Logf("Mapping %d files to directories", len(files))
-	dirs := makeDirs(files)
 	c.Logf("Removing existing directories from database")
 	if err := c.dbClient.DeleteSite(c.site.Name); err != nil {
 		return err
 	}
+	dirs := toDirs(files)
 	c.Logf("Inserting %d directories into database", len(dirs))
 	if err := c.dbClient.Insert(c.site.Name, dirs); err != nil {
 		return err
@@ -103,14 +102,14 @@ func (c *Crawler) Run() error {
 	return nil
 }
 
-func filterFiles(files []ftp.File, ignore []string, ignoreSymlink bool) []ftp.File {
+func filterFiles(files []ftp.File, excludedFiles []string, ignoreSymlinks bool) []ftp.File {
 	keep := []ftp.File{}
 Loop:
 	for _, f := range files {
-		if ignoreSymlink && f.IsSymlink() {
+		if ignoreSymlinks && f.IsSymlink() {
 			continue
 		}
-		for _, name := range ignore {
+		for _, name := range excludedFiles {
 			if f.Name == name {
 				continue Loop
 			}
@@ -120,7 +119,7 @@ Loop:
 	return keep
 }
 
-func makeDirs(files []ftp.File) []database.Dir {
+func toDirs(files []ftp.File) []database.Dir {
 	keep := []database.Dir{}
 	for _, f := range files {
 		d := database.Dir{
@@ -132,7 +131,7 @@ func makeDirs(files []ftp.File) []database.Dir {
 	return keep
 }
 
-func walkShallow(lister dirLister, path string, maxdepth int) ([]ftp.File, error) {
+func list(lister dirLister, path string) ([]ftp.File, error) {
 	files, err := lister.list(path)
 	if err != nil {
 		return nil, err
@@ -145,7 +144,23 @@ func walkShallow(lister dirLister, path string, maxdepth int) ([]ftp.File, error
 		}
 		return files[i].Name < files[j].Name
 	})
-Loop:
+	return files, nil
+}
+
+func containsOnlyDir(files []ftp.File) bool {
+	for _, f := range files {
+		if !f.Mode.IsDir() {
+			return false
+		}
+	}
+	return true
+}
+
+func walk(lister dirLister, path string, maxdepth int) ([]ftp.File, error) {
+	files, err := list(lister, path)
+	if err != nil {
+		return nil, err
+	}
 	for _, f := range files {
 		if !f.Mode.IsDir() {
 			continue
@@ -156,18 +171,15 @@ Loop:
 			continue
 		}
 		// Peek at sub-directory to determine max depth
-		peek, err := lister.list(subpath)
+		children, err := list(lister, subpath)
 		if err != nil {
 			return nil, err
 		}
-		peek = lister.filterFiles(peek)
-		for _, f := range peek {
-			if !f.Mode.IsDir() {
-				maxdepth = depth - 1
-				continue Loop
-			}
+		if !containsOnlyDir(children) {
+			maxdepth = depth - 1
+			continue
 		}
-		fs, err := walkShallow(lister, subpath, maxdepth)
+		fs, err := walk(lister, subpath, maxdepth)
 		if err != nil {
 			return nil, err
 		}
