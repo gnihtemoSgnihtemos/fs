@@ -138,8 +138,11 @@ func list(lister dirLister, path string) ([]ftp.File, error) {
 	files = lister.filterFiles(files)
 	sort.Slice(files, func(i, j int) bool {
 		// Sort file names starting with underscore first
-		if strings.Index(files[i].Name, "_") == 0 && strings.Index(files[j].Name, "_") != 0 {
+		if strings.Index(files[i].Name, "_") == 0 {
 			return true
+		}
+		if strings.Index(files[j].Name, "_") == 0 {
+			return false
 		}
 		return files[i].Name < files[j].Name
 	})
