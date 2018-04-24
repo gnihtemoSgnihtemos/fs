@@ -3,6 +3,7 @@ package crawler
 import (
 	"fmt"
 	"os"
+	"reflect"
 	"testing"
 
 	"github.com/mpolden/fs/database"
@@ -96,16 +97,48 @@ func TestWalk(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(want) != len(got) {
-		t.Fatal("expected equal length")
-	}
 	for i := range want {
-		if want[i].Name != got[i].Name {
-			t.Errorf("want Name=%s, got Name=%s", want[i].Name, got[i].Name)
+		other := ftp.File{}
+		if i < len(got) {
+			other = got[i]
 		}
-		if want[i].Mode != got[i].Mode {
-			t.Errorf("want Mode=%d, got Mode=%d", want[i].Mode, got[i].Mode)
+		if want[i].Name != other.Name {
+			t.Errorf("want Name=%s, got Name=%s", want[i].Name, other.Name)
 		}
+		if want[i].Mode != other.Mode {
+			t.Errorf("want Mode=%d, got Mode=%d", want[i].Mode, other.Mode)
+		}
+	}
+}
+
+func TestSortFiles(t *testing.T) {
+	got := []ftp.File{
+		{Name: "_C"},
+		{Name: "_b"},
+		{Name: "_A"},
+		{Name: "_B"},
+		{Name: "B"},
+		{Name: "A"},
+		{Name: "_c"},
+		{Name: "C"},
+		{Name: "_a"},
+		{Name: ""},
+	}
+	sortFiles(got)
+	want := []ftp.File{
+		{Name: "_A"},
+		{Name: "_B"},
+		{Name: "_C"},
+		{Name: "_a"},
+		{Name: "_b"},
+		{Name: "_c"},
+		{Name: ""},
+		{Name: "A"},
+		{Name: "B"},
+		{Name: "C"},
+	}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("want %+v, got %+v", want, got)
 	}
 }
 

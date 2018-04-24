@@ -130,15 +130,13 @@ func toDirs(files []ftp.File) []database.Dir {
 	return keep
 }
 
-func list(lister dirLister, path string) ([]ftp.File, error) {
-	files, err := lister.list(path)
-	if err != nil {
-		return nil, err
-	}
-	files = lister.filterFiles(files)
+func sortFiles(files []ftp.File) {
 	sort.Slice(files, func(i, j int) bool {
 		// Sort file names starting with underscore first
 		if strings.Index(files[i].Name, "_") == 0 {
+			if strings.Index(files[j].Name, "_") == 0 {
+				return files[i].Name < files[j].Name
+			}
 			return true
 		}
 		if strings.Index(files[j].Name, "_") == 0 {
@@ -146,6 +144,15 @@ func list(lister dirLister, path string) ([]ftp.File, error) {
 		}
 		return files[i].Name < files[j].Name
 	})
+}
+
+func list(lister dirLister, path string) ([]ftp.File, error) {
+	files, err := lister.list(path)
+	if err != nil {
+		return nil, err
+	}
+	files = lister.filterFiles(files)
+	sortFiles(files)
 	return files, nil
 }
 
