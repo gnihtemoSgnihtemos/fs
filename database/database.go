@@ -7,8 +7,6 @@ import (
 
 	"github.com/jmoiron/sqlx"
 	_ "github.com/mattn/go-sqlite3"
-
-	"database/sql"
 )
 
 const schema = `
@@ -78,20 +76,6 @@ func New(filename string) (*Client, error) {
 	return &Client{db: db}, nil
 }
 
-func (c *Client) getOrInsertSite(name string) (Site, error) {
-	var site Site
-	err := c.db.Get(&site, "SELECT * FROM site WHERE name = $1", name)
-	if err == sql.ErrNoRows {
-		if _, err := c.db.Exec("INSERT INTO site (name) VALUES ($1)", name); err != nil {
-			return Site{}, err
-		}
-		return c.getOrInsertSite(name)
-	} else if err != nil {
-		return Site{}, err
-	}
-	return site, nil
-}
-
 func (c *Client) GetSites() ([]Site, error) {
 	var sites []Site
 	if err := c.db.Select(&sites, "SELECT * FROM site ORDER BY name ASC"); err != nil {
@@ -116,10 +100,6 @@ func (c *Client) DeleteSites(names []string) error {
 	return tx.Commit()
 }
 
-func (c *Client) DeleteSite(name string) error {
-	return c.DeleteSites([]string{name})
-}
-
 func (c *Client) Vacuum() error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -138,17 +118,23 @@ func (c *Client) Insert(siteName string, dirs []Dir) error {
 	// Ensure writes to SQLite db are serialized
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	site, err := c.getOrInsertSite(siteName)
-	if err != nil {
-		return err
-	}
 	tx, err := c.db.Beginx()
 	if err != nil {
 		return err
 	}
 	defer tx.Rollback()
+	if _, err := tx.Exec("DELETE FROM site WHERE name = $1", siteName); err != nil {
+		return err
+	}
+	if _, err := tx.Exec("INSERT INTO site (name) VALUES ($1)", siteName); err != nil {
+		return err
+	}
+	siteID := 0
+	if err := tx.Get(&siteID, "SELECT id FROM site WHERE name = $1", siteName); err != nil {
+		return err
+	}
 	for _, d := range dirs {
-		if _, err := tx.Exec("INSERT INTO dir (site_id, path, modified) VALUES ($1, $2, $3)", site.ID, d.Path, d.Modified); err != nil {
+		if _, err := tx.Exec("INSERT INTO dir (site_id, path, modified) VALUES ($1, $2, $3)", siteID, d.Path, d.Modified); err != nil {
 			return err
 		}
 	}

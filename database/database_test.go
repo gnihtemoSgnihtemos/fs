@@ -13,30 +13,9 @@ func testClient() *Client {
 	return c
 }
 
-func TestGetOrInsertSite(t *testing.T) {
-	c := testClient()
-	s1, err := c.getOrInsertSite("foo")
-	if err != nil {
-		t.Fatal(err)
-	}
-	if s1.ID == 0 {
-		t.Error("Expected ID to be non-zero")
-	}
-	if want := "foo"; s1.Name != want {
-		t.Errorf("Expected Name=%q, got Name=%q", want, s1.Name)
-	}
-	s2, err := c.getOrInsertSite("foo")
-	if err != nil {
-		t.Fatal(err)
-	}
-	if s2.ID != s1.ID {
-		t.Errorf("s1.ID(%d) != s2.ID(%d)", s1.ID, s2.ID)
-	}
-}
-
 func TestGetSites(t *testing.T) {
 	c := testClient()
-	if _, err := c.getOrInsertSite("foo"); err != nil {
+	if err := c.Insert("foo", nil); err != nil {
 		t.Fatal(err)
 	}
 	sites, err := c.GetSites()
@@ -51,46 +30,35 @@ func TestGetSites(t *testing.T) {
 	}
 }
 
-func TestInsertAndDeleteSites(t *testing.T) {
+func TestInsert(t *testing.T) {
 	c := testClient()
 	var tests = []struct {
-		dirCount  int
-		siteCount int
-		ftsCount  int
-		delete    bool
+		site string
+		dirs []Dir
 	}{
-		{1, 1, 1, false},
-		{0, 0, 0, true},
+		{"foo", []Dir{{Path: "dir1"}}},
+		{"foo", []Dir{{Path: "dir2"}, {Path: "dir3"}}}, // Overwrites previous insert
+		{"bar", nil},
 	}
 	for _, tt := range tests {
-		if tt.delete {
-			if err := c.DeleteSite("foo"); err != nil {
-				t.Fatal(err)
-			}
-		} else {
-			dirs := []Dir{{Path: "dir1"}}
-			if err := c.Insert("foo", dirs); err != nil {
-				t.Fatal(err)
-			}
-		}
-		var count int
-		if err := c.db.Get(&count, "SELECT COUNT(*) FROM site WHERE name = $1", "foo"); err != nil {
+		if err := c.Insert(tt.site, tt.dirs); err != nil {
 			t.Fatal(err)
 		}
-		if count != tt.siteCount {
-			t.Errorf("Expected site row count %d, got %d", tt.siteCount, count)
-		}
-		if err := c.db.Get(&count, "SELECT COUNT(*) FROM dir WHERE path = $1", "dir1"); err != nil {
+
+		var site Site
+		if err := c.db.Get(&site, "SELECT * FROM site WHERE name = $1", tt.site); err != nil {
 			t.Fatal(err)
 		}
-		if count != tt.dirCount {
-			t.Errorf("Expected dir row count %d, got %d", tt.dirCount, count)
+		if site.Name != tt.site {
+			t.Fatalf("want Name=%s, got %s", tt.site, site.Name)
 		}
-		if err := c.db.Get(&count, "SELECT COUNT(*) FROM dir_fts WHERE path MATCH $1", "dir1"); err != nil {
+
+		var dirs []Dir
+		if err := c.db.Select(&dirs, "SELECT path, modified FROM dir WHERE site_id = $1", site.ID); err != nil {
 			t.Fatal(err)
 		}
-		if count != tt.ftsCount {
-			t.Errorf("Expected dir_fts row count %d, got %d", tt.ftsCount, count)
+		if len(dirs) != len(tt.dirs) {
+			t.Fatalf("want %d dirs, got %d", len(tt.dirs), len(dirs))
 		}
 	}
 }

@@ -89,10 +89,6 @@ func (c *Crawler) Run() error {
 	if err != nil {
 		return err
 	}
-	c.Logf("Removing existing directories from database")
-	if err := c.dbClient.DeleteSite(c.site.Name); err != nil {
-		return err
-	}
 	dirs := toDirs(files)
 	c.Logf("Inserting %d directories into database", len(dirs))
 	if err := c.dbClient.Insert(c.site.Name, dirs); err != nil {
