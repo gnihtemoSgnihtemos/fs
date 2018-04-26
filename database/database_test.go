@@ -13,12 +13,12 @@ func testClient() *Client {
 	return c
 }
 
-func TestGetSites(t *testing.T) {
+func TestSelectSites(t *testing.T) {
 	c := testClient()
 	if err := c.Insert("foo", nil); err != nil {
 		t.Fatal(err)
 	}
-	sites, err := c.GetSites()
+	sites, err := c.SelectSites()
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -38,7 +38,7 @@ func (c *GC) Execute(args []string) error {
 	if err != nil {
 		return err
 	}
-	sites, err := db.GetSites()
+	sites, err := db.SelectSites()
 	if err != nil {
 		return err
 	}

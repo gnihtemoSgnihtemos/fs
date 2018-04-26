@@ -76,7 +76,7 @@ func New(filename string) (*Client, error) {
 	return &Client{db: db}, nil
 }
 
-func (c *Client) GetSites() ([]Site, error) {
+func (c *Client) SelectSites() ([]Site, error) {
 	var sites []Site
 	if err := c.db.Select(&sites, "SELECT * FROM site ORDER BY name ASC"); err != nil {
 		return nil, err
