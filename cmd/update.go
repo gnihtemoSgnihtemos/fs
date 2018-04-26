@@ -10,14 +10,24 @@ import (
 
 type Update struct {
 	opts
-	Site string `short:"s" long:"site" description:"Update a single site" value-name:"NAME"`
+	Dryrun bool     `short:"n" long:"dry-run" description:"Only show what would be crawled"`
+	Sites  []string `short:"s" long:"site" description:"Update a single site" value-name:"NAME"`
 }
 
-func (c *Update) Execute(args []string) error {
+func (u *Update) updateSite(name string) bool {
+	for _, site := range u.Sites {
+		if site == name {
+			return true
+		}
+	}
+	return len(u.Sites) == 0
+}
+
+func (u *Update) Execute(args []string) error {
 	if len(args) != 0 {
 		return errUnexpectedArgs
 	}
-	cfg := mustReadConfig(c.Config)
+	cfg := mustReadConfig(u.Config)
 	db, err := database.New(cfg.Database)
 	if err != nil {
 		return err
@@ -25,16 +35,17 @@ func (c *Update) Execute(args []string) error {
 	logger := log.New(os.Stderr, "fs: ", 0)
 	sem := make(chan bool, cfg.Concurrency)
 	for _, site := range cfg.Sites {
-		if c.Site != "" && c.Site != site.Name {
-			continue
-		}
-		if site.Skip {
+		if !u.updateSite(site.Name) || site.Skip {
 			continue
 		}
 		sem <- true
 		go func(site crawler.Site) {
 			defer func() { <-sem }()
 			c := crawler.New(site, db, logger)
+			if u.Dryrun {
+				c.Logf("Updating (dry run)")
+				return
+			}
 			if err := c.Connect(); err != nil {
 				c.Logf("Failed to connect: %s", err)
 				return
