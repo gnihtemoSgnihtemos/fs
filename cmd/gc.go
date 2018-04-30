@@ -8,6 +8,7 @@ import (
 
 type GC struct {
 	opts
+	Logger  *log.Logger
 	Dryrun  bool     `short:"n" long:"dry-run" description:"Only show what would be deleted"`
 	Exclude []string `short:"e" long:"exclude" description:"Exclude sites" value-name:"SITES"`
 }
@@ -57,14 +58,14 @@ func (c *GC) Execute(args []string) error {
 		}
 		return nil
 	}
-	log.Printf("Removing %d sites", len(remove))
+	c.Logger.Printf("Removing %d sites", len(remove))
 	if err := db.DeleteSites(remove); err != nil {
 		return err
 	}
-	log.Print("Optimizing FTS table")
+	c.Logger.Print("Optimizing FTS table")
 	if err := db.Optimize(); err != nil {
 		return err
 	}
-	log.Print("Rebuilding database")
+	c.Logger.Print("Rebuilding database")
 	return db.Vacuum()
 }

@@ -11,16 +11,19 @@ import (
 func main() {
 	p := flags.NewParser(nil, flags.Default)
 
+	logger := log.New(os.Stderr, "fs: ", 0)
 	var update cmd.Update
 	if _, err := p.AddCommand("update", "Update database",
 		"Crawls sites and updates the database.", &update); err != nil {
 		log.Fatal(err)
 	}
+	update.Logger = logger
 	var gc cmd.GC
 	if _, err := p.AddCommand("gc", "Clean database",
 		"Remove entries for sites that do not exist in config", &gc); err != nil {
 		log.Fatal(err)
 	}
+	gc.Logger = logger
 	var search cmd.Search
 	if _, err := p.AddCommand("search", "Search database",
 		"Search database", &search); err != nil {

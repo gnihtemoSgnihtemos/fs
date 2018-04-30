@@ -12,6 +12,7 @@ import (
 var errUnexpectedArgs = errors.New("command does not accept any arguments")
 
 type opts struct {
+	Log    *log.Logger
 	Config string `short:"f" long:"config" description:"Config file" value-name:"FILE" default:"~/.fsrc"`
 }
 

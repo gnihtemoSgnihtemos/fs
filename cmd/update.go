@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"log"
-	"os"
 
 	"github.com/mpolden/fs/crawler"
 	"github.com/mpolden/fs/database"
@@ -10,6 +9,7 @@ import (
 
 type Update struct {
 	opts
+	Logger *log.Logger
 	Dryrun bool     `short:"n" long:"dry-run" description:"Only show what would be crawled"`
 	Sites  []string `short:"s" long:"site" description:"Update a single site" value-name:"NAME"`
 }
@@ -32,7 +32,6 @@ func (u *Update) Execute(args []string) error {
 	if err != nil {
 		return err
 	}
-	logger := log.New(os.Stderr, "fs: ", 0)
 	sem := make(chan bool, cfg.Concurrency)
 	for _, site := range cfg.Sites {
 		if !u.updateSite(site.Name) || site.Skip {
@@ -41,9 +40,9 @@ func (u *Update) Execute(args []string) error {
 		sem <- true
 		go func(site crawler.Site) {
 			defer func() { <-sem }()
-			c := crawler.New(site, db, logger)
+			c := crawler.New(site, db, u.Logger)
 			if u.Dryrun {
-				c.Logf("Updating (dry run)")
+				c.Logf("Would update")
 				return
 			}
 			if err := c.Connect(); err != nil {
