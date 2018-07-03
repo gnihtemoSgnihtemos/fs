@@ -6,8 +6,8 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/mpolden/fs/database"
 	"github.com/mpolden/fs/ftp"
+	"github.com/mpolden/fs/sql"
 )
 
 type fakeLister struct{}
@@ -144,7 +144,7 @@ func TestSortFiles(t *testing.T) {
 
 func TestToDirs(t *testing.T) {
 	files := []ftp.File{{Path: "/foo", Name: "foo"}}
-	want := database.Dir{Path: "/foo"}
+	want := sql.Dir{Path: "/foo"}
 	got := toDirs(files)
 	if len(got) == 0 {
 		t.Fatal("expected non-zero length")

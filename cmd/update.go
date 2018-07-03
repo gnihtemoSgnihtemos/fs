@@ -4,7 +4,7 @@ import (
 	"log"
 
 	"github.com/mpolden/fs/crawler"
-	"github.com/mpolden/fs/database"
+	"github.com/mpolden/fs/sql"
 )
 
 type Update struct {
@@ -28,7 +28,7 @@ func (u *Update) Execute(args []string) error {
 		return errUnexpectedArgs
 	}
 	cfg := mustReadConfig(u.Config)
-	db, err := database.New(cfg.Database)
+	db, err := sql.New(cfg.Database)
 	if err != nil {
 		return err
 	}

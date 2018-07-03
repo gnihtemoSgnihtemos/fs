@@ -8,7 +8,7 @@ import (
 	"text/tabwriter"
 	"time"
 
-	"github.com/mpolden/fs/database"
+	"github.com/mpolden/fs/sql"
 	"github.com/olekukonko/tablewriter"
 )
 
@@ -20,7 +20,7 @@ type Search struct {
 	Order  []string `short:"o" long:"order" description:"Columns to sort results by" value-name:"COLUMN" default:"site:asc" default:"dir.path:asc"`
 }
 
-func writeTable(w io.Writer, dirs []database.Dir) error {
+func writeTable(w io.Writer, dirs []sql.Dir) error {
 	table := tablewriter.NewWriter(w)
 	table.SetHeader([]string{"Site", "Path", "Date"})
 	for _, d := range dirs {
@@ -32,7 +32,7 @@ func writeTable(w io.Writer, dirs []database.Dir) error {
 	return nil
 }
 
-func writeSimple(w io.Writer, dirs []database.Dir) error {
+func writeSimple(w io.Writer, dirs []sql.Dir) error {
 	tab := tabwriter.NewWriter(w, 0, 8, 0, '\t', 0)
 	fmt.Fprintln(tab, "SITE\tPATH\tDATE")
 	for _, d := range dirs {
@@ -41,14 +41,14 @@ func writeSimple(w io.Writer, dirs []database.Dir) error {
 	return tab.Flush()
 }
 
-func writePath(w io.Writer, dirs []database.Dir) error {
+func writePath(w io.Writer, dirs []sql.Dir) error {
 	for _, d := range dirs {
 		fmt.Fprintf(w, "%s %s\n", d.Site, d.Path)
 	}
 	return nil
 }
 
-func writeResults(f *os.File, format string, dirs []database.Dir) error {
+func writeResults(f *os.File, format string, dirs []sql.Dir) error {
 	if format == "" {
 		stat, err := f.Stat()
 		if err != nil {
@@ -70,11 +70,11 @@ func writeResults(f *os.File, format string, dirs []database.Dir) error {
 
 func (c *Search) Execute(args []string) error {
 	cfg := mustReadConfig(c.Config)
-	db, err := database.New(cfg.Database)
+	db, err := sql.New(cfg.Database)
 	if err != nil {
 		return err
 	}
-	order, err := database.OrderByClauses(c.Order)
+	order, err := sql.OrderByClauses(c.Order)
 	if err != nil {
 		return err
 	}

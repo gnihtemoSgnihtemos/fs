@@ -3,7 +3,7 @@ package cmd
 import (
 	"log"
 
-	"github.com/mpolden/fs/database"
+	"github.com/mpolden/fs/sql"
 )
 
 type GC struct {
@@ -35,7 +35,7 @@ func (c *GC) Execute(args []string) error {
 		return errUnexpectedArgs
 	}
 	cfg := mustReadConfig(c.Config)
-	db, err := database.New(cfg.Database)
+	db, err := sql.New(cfg.Database)
 	if err != nil {
 		return err
 	}

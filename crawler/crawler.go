@@ -8,8 +8,8 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/mpolden/fs/database"
 	"github.com/mpolden/fs/ftp"
+	"github.com/mpolden/fs/sql"
 )
 
 type dirLister interface {
@@ -21,10 +21,10 @@ type Crawler struct {
 	site      Site
 	logger    *log.Logger
 	ftpClient *ftp.Client
-	dbClient  *database.Client
+	dbClient  *sql.Client
 }
 
-func New(site Site, dbClient *database.Client, logger *log.Logger) *Crawler {
+func New(site Site, dbClient *sql.Client, logger *log.Logger) *Crawler {
 	return &Crawler{
 		dbClient: dbClient,
 		site:     site,
@@ -114,10 +114,10 @@ Loop:
 	return keep
 }
 
-func toDirs(files []ftp.File) []database.Dir {
-	keep := []database.Dir{}
+func toDirs(files []ftp.File) []sql.Dir {
+	keep := []sql.Dir{}
 	for _, f := range files {
-		d := database.Dir{
+		d := sql.Dir{
 			Path:     f.Path,
 			Modified: f.Modified.Unix(),
 		}
