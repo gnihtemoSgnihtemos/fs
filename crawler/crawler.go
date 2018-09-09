@@ -68,16 +68,17 @@ func (c *Crawler) Logf(format string, v ...interface{}) {
 
 func (c *Crawler) list(path string) ([]ftp.File, error) {
 	// STAT may not support listing directories containing spaces, change to directory before listing
-	if strings.Contains(path, " ") {
-		if err := c.ftpClient.Cwd(path); err != nil {
-			c.Logf("Changing directory to %s failed: %s", path, err)
+	p := path
+	if strings.Contains(p, " ") {
+		if err := c.ftpClient.Cwd(p); err != nil {
+			c.Logf("Changing directory to %s failed: %s", p, err)
 			return nil, nil
 		}
-		path = "." // Current directory
+		p = "." // Current directory
 	}
-	message, err := c.ftpClient.Stat(path)
+	message, err := c.ftpClient.Stat(p)
 	if err != nil {
-		c.Logf("Listing directory %s failed: %s", path, err)
+		c.Logf("Listing directory %s failed: %s", p, err)
 		return nil, nil
 	}
 	return ftp.ParseFiles(path, strings.NewReader(message))
