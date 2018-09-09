@@ -45,7 +45,7 @@ func readConfig(r io.Reader) (Config, error) {
 	if err := json.Unmarshal(data, &defaults); err != nil {
 		return Config{}, err
 	}
-	for i, _ := range defaults.Sites {
+	for i := range defaults.Sites {
 		defaults.Sites[i] = defaults.Default
 		defaults.Sites[i].Ignore = make([]string, len(defaults.Default.Ignore))
 		copy(defaults.Sites[i].Ignore, defaults.Default.Ignore)
