@@ -104,6 +104,11 @@ func (c *Client) AuthTLS(config *tls.Config) error {
 	return nil
 }
 
+func (c *Client) Cwd(args string) error {
+	_, _, err := c.Cmd(250, "CWD %s", args)
+	return err
+}
+
 func (c *Client) Stat(args string) (string, error) {
 	_, message, err := c.Cmd(213, "STAT %s", args)
 	return message, err
